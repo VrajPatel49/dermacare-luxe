@@ -104,6 +104,9 @@
   
   <!-- Lucide Vector Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Supabase CDN Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-[#FAF9F6] text-darkText font-sans leading-relaxed selection:bg-accent/20 selection:text-primary overflow-x-hidden antialiased">
 
@@ -113,6 +116,11 @@
   <!-- Main React Script compiles in browser -->
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
+
+    // Supabase Client Initialization
+    const SUPABASE_URL = 'https://yzlpfdeldsrqxdqfvixg.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_mRUyQgQmZKe72tYDBr5bCg_X-U6vMP2';
+    const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
     // ==========================================
     // 1. DATA STORE
@@ -1199,6 +1207,7 @@
         message: ''
       });
       const [errors, setErrors] = useState({});
+      const [isSubmitting, setIsSubmitting] = useState(false);
 
       useEffect(() => {
         if (selectedService) {
@@ -1256,12 +1265,46 @@
         setCurrentStep((prev) => Math.max(1, prev - 1));
       };
 
-      const handleFormSubmit = (e) => {
+      const handleFormSubmit = async (e) => {
         e.preventDefault();
         if (validateStep3()) {
-          onSubmitSuccess(formData.name);
-          setFormData({ name: '', phone: '', email: '', date: '', treatment: '', message: '' });
-          setCurrentStep(1);
+          setIsSubmitting(true);
+          
+          let dbSuccess = true;
+          if (supabaseClient) {
+            try {
+              const { error } = await supabaseClient
+                .from('appointments')
+                .insert([
+                  {
+                    name: formData.name.trim(),
+                    phone: formData.phone.trim(),
+                    email: formData.email.trim(),
+                    date: formData.date,
+                    treatment: formData.treatment,
+                    message: formData.message.trim(),
+                    created_at: new Date().toISOString()
+                  }
+                ]);
+              if (error) {
+                console.error("Supabase insert error:", error);
+                dbSuccess = false;
+              }
+            } catch (err) {
+              console.error("Supabase connection exception:", err);
+              dbSuccess = false;
+            }
+          }
+
+          setIsSubmitting(false);
+
+          if (dbSuccess) {
+            onSubmitSuccess(formData.name, true);
+            setFormData({ name: '', phone: '', email: '', date: '', treatment: '', message: '' });
+            setCurrentStep(1);
+          } else {
+            onSubmitSuccess(formData.name, false);
+          }
         }
       };
 
@@ -1448,9 +1491,10 @@
                           
                           <button
                             type="submit"
-                            className="w-full sm:w-3/4 bg-gradient-to-r from-accent via-accentDark to-accent text-primary font-sans font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl shadow-goldGlow hover:scale-102 active:scale-98 transition-all focus:ring-2 focus:ring-accent"
+                            disabled={isSubmitting}
+                            className={`w-full sm:w-3/4 bg-gradient-to-r from-accent via-accentDark to-accent text-primary font-sans font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl shadow-goldGlow hover:scale-102 active:scale-98 transition-all focus:ring-2 focus:ring-accent ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
-                            Request Consultation Slot
+                            {isSubmitting ? 'Securing Slot...' : 'Request Consultation Slot'}
                           </button>
                         </div>
                       </div>
@@ -1856,6 +1900,7 @@
       const [selectedService, setSelectedService] = useState(null);
       const [bookingPresetService, setBookingPresetService] = useState('');
       const [toastMessage, setToastMessage] = useState(null);
+      const [toastType, setToastType] = useState('success');
 
       // Scroll tracker for navigation anchors
       useEffect(() => {
@@ -1916,8 +1961,14 @@
         }
       };
 
-      const handleFormSubmitSuccess = (patientName) => {
-        setToastMessage(`Thank you, ${patientName}! Your consultation request was received. We will contact you soon.`);
+      const handleFormSubmitSuccess = (patientName, isDbSuccess = true) => {
+        if (isDbSuccess) {
+          setToastType('success');
+          setToastMessage(`Thank you, ${patientName}! Your consultation request was received. We will contact you soon.`);
+        } else {
+          setToastType('error');
+          setToastMessage(`Sorry, ${patientName}, something went wrong with the database connection. Please try again.`);
+        }
         setBookingPresetService('');
         setTimeout(() => setToastMessage(null), 5000);
       };
@@ -1933,9 +1984,9 @@
 
           {/* Floating Toast Alert */}
           {toastMessage && (
-            <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] bg-slate-900 border border-emerald-500/20 text-white font-sans font-bold text-xs sm:text-sm px-6 py-4 rounded-2xl shadow-premium flex items-center gap-3 animate-[bounce_0.5s_ease-out]">
-              <div className="bg-emerald-500 p-1.5 rounded-full flex items-center justify-center shrink-0">
-                <Icon name="check" className="w-4 h-4 text-white" />
+            <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] bg-slate-900 border ${toastType === 'success' ? 'border-emerald-500/20' : 'border-red-500/20'} text-white font-sans font-bold text-xs sm:text-sm px-6 py-4 rounded-2xl shadow-premium flex items-center gap-3 animate-[bounce_0.5s_ease-out]`}>
+              <div className={`${toastType === 'success' ? 'bg-emerald-500' : 'bg-red-500'} p-1.5 rounded-full flex items-center justify-center shrink-0`}>
+                <Icon name={toastType === 'success' ? 'check' : 'alert-triangle'} className="w-4 h-4 text-white" />
               </div>
               <span>{toastMessage}</span>
               <button 
