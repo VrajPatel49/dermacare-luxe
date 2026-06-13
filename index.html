@@ -1,0 +1,2018 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dr. Priya Sharma | DermaCare Luxe Skin &amp; Laser Clinic</title>
+  <meta name="description" content="Expert dermatologist &amp; cosmetic skin specialist in Mumbai. Discover your glowing, flawless skin with our scientific aesthetic protocols.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0B1E36',     // Obsidian Prussian Blue
+            secondary: '#14B8A6',   // Healing Mint Teal
+            accent: '#DFBA84',      // Champagne Gold
+            accentDark: '#C59B62',  // Antique Deep Gold
+            lightBg: '#FAF9F6',     // Pearl Alabaster Base
+            darkText: '#0F172A',
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans: ['"Inter"', 'sans-serif'],
+          },
+          boxShadow: {
+            premium: '0 20px 50px rgba(11, 30, 54, 0.06)',
+            goldGlow: '0 0 30px rgba(223, 186, 132, 0.25)',
+            tealGlow: '0 0 30px rgba(20, 184, 166, 0.15)',
+            glass: '0 8px 32px rgba(11, 30, 54, 0.02)',
+            double: '0 4px 10px rgba(0,0,0,0.01), 0 20px 40px rgba(11,30,54,0.04)'
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom Advanced Styling -->
+  <style>
+    /* Custom webkit scrollbars for high-end feel */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FAF9F6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #DFBA84;
+      border-radius: 20px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #C59B62;
+    }
+    
+    /* Mesh Animated Background */
+    @keyframes meshAnimation {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .mesh-gradient {
+      background: linear-gradient(135deg, #FAF6EE 0%, #EEF7F6 50%, #FAF9F6 100%);
+      background-size: 200% 200%;
+      animation: meshAnimation 12s ease infinite;
+    }
+
+    /* Glassmorphism custom standard */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Interactive Slider bar custom adjustments */
+    .no-select {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    *:focus-visible {
+      outline: 2px solid #14B8A6;
+      outline-offset: 3px;
+    }
+  </style>
+
+  <!-- React 18 & ReactDOM 18 UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel compiler -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Lucide Vector Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#FAF9F6] text-darkText font-sans leading-relaxed selection:bg-accent/20 selection:text-primary overflow-x-hidden antialiased">
+
+  <!-- React Target -->
+  <div id="root"></div>
+
+  <!-- Main React Script compiles in browser -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    // ==========================================
+    // 1. DATA STORE
+    // ==========================================
+
+    const SERVICES_DATA = [
+      {
+        id: 'acne',
+        name: 'Acne & Scar Treatment',
+        icon: 'droplets',
+        desc: 'Shatter active acne and stimulate dermis repair using therapeutic gold-standard peels and non-ablative RF microneedling.',
+        duration: '45 - 60 min',
+        sessions: '3 - 5 Sessions',
+        recovery: '1 - 2 Days',
+        idealFor: 'Pitted scars, hyperpigmentation, active congestion.',
+        category: 'Acne',
+        efficacy: '97%',
+        fullDetails: 'Combining medical chemical peeling with high-frequency RF needling targets root causes. Peels clear keratin plugs, while sterile needles stimulate deep fibroblast cells to reconstruct scarred skin, leaving skin smooth and uniform.'
+      },
+      {
+        id: 'hair-loss',
+        name: 'Hair Loss Therapy (PRP)',
+        icon: 'wind',
+        desc: 'Clinical autologous growth factors injected into the scalp to restore thinning crown density and reactivate dormant follicles.',
+        duration: '60 min',
+        sessions: '4 - 6 Sessions',
+        recovery: 'Immediate',
+        idealFor: 'Weak roots, crown thinning, stress-induced shedding.',
+        category: 'Hair',
+        efficacy: '94%',
+        fullDetails: 'PRP concentrates high levels of healing growth factors from your own blood. Under local anesthetic, this gold serum is injected into sparse scalp areas to expand follicle bulbs and extend the active growing phase.'
+      },
+      {
+        id: 'eczema',
+        name: 'Skin Allergy & Eczema',
+        icon: 'shield',
+        desc: 'Advanced patch testing, barrier-repair formulas, and tailored immunotherapy protocols to manage chronic dermatitis.',
+        duration: '30 min',
+        sessions: 'Ongoing',
+        recovery: 'None',
+        idealFor: 'Extreme flaking, dynamic rashes, histamine triggers.',
+        category: 'Allergy',
+        efficacy: '98%',
+        fullDetails: 'We isolate allergens through clinical patch diagnostics. Our protocols reconstruct damaged moisture barriers using custom emollients, medical light therapy, and advanced biologic creams for severe flares.'
+      },
+      {
+        id: 'laser-resurfacing',
+        name: 'Laser Resurfacing',
+        icon: 'zap',
+        desc: 'Fractional CO2 laser grids to vaporize aging skin layers, clear deep expression lines, and shrink enlarged pores.',
+        duration: '45 min',
+        sessions: '2 - 4 Sessions',
+        recovery: '3 - 5 Days',
+        idealFor: 'Static wrinkles, sun damage, deep textural pits.',
+        category: 'Laser',
+        efficacy: '96%',
+        fullDetails: 'Our laser sends micro-beams of thermal energy down into the dermis. This vaporizes sun-damaged cells, triggers instant contraction of loose elastin fibers, and remodels complete facial texture.'
+      },
+      {
+        id: 'botox',
+        name: 'Anti-Aging & Botox',
+        icon: 'sparkles',
+        desc: 'Gracefully erase expression furrows and plump hollow structural regions using premium FDA neuromodulators.',
+        duration: '30 min',
+        sessions: '4 - 6 Months',
+        recovery: 'Minimal',
+        idealFor: 'Crow\'s feet, forehead lines, sunken cheeks.',
+        category: 'Anti-Aging',
+        efficacy: '99%',
+        fullDetails: 'Achieve a well-rested appearance that preserves natural dynamic expressions. We strategically inject premium FDA-approved relaxers and hyaluronic fillers to elevate dynamic muscle planes.'
+      },
+      {
+        id: 'pigmentation',
+        name: 'Pigmentation Correction',
+        icon: 'sun',
+        desc: 'Q-Switched Nd:YAG lasers and tailored botanical lighteners to dismantle melasma and sun freckles.',
+        duration: '45 min',
+        sessions: '4 - 6 Sessions',
+        recovery: 'Minimal',
+        idealFor: 'Patchy cheek melasma, dark sun spots, uneven tone.',
+        category: 'Pigmentation',
+        efficacy: '95%',
+        fullDetails: 'Our lasers shatter deep hyper-concentrated melanin deposits without overheating the surface skin. We couple this with custom brightening micro-infusions to maintain long-term clarity.'
+      },
+      {
+        id: 'cosmetic',
+        name: 'Cosmetic Dermatology',
+        icon: 'star',
+        desc: 'Medical-grade Hydrafacials and direct skin-booster micro-droplets to deliver an ultra-dewy glass skin glow.',
+        duration: '75 min',
+        sessions: 'Monthly',
+        recovery: '12 Hours',
+        idealFor: 'Bridal prep, dry dull complexion, glow maintenance.',
+        category: 'Cosmetic',
+        efficacy: '98%',
+        fullDetails: 'This multi-step medical facial uses vortex suction to sweep away impurities, drenching the skin in rich hyaluronic acid, anti-aging peptides, and brightening antioxidants for instant glass-skin radiance.'
+      }
+    ];
+
+    const QUIZ_QUESTIONS = [
+      { concern: 'Acne & Deep Scars', treatment: 'Acne & Scar Treatment', duration: '45-60 min', code: 'acne', resultText: 'Dr. Priya\'s signature microneedling RF and blue-light protocol is clinically tailored for this.' },
+      { concern: 'Hair Shedding / Baldness', treatment: 'Hair Loss Therapy (PRP)', duration: '60 min', code: 'hair-loss', resultText: 'Our high-density autologous growth factor PRP injections help reactivate follicles.' },
+      { concern: 'Dark Spots & Melasma', treatment: 'Pigmentation Correction', duration: '45 min', code: 'pigmentation', resultText: 'Q-Switched lasers coupled with medical brightening peels will restore an even complexion.' },
+      { concern: 'Wrinkles & Loss of Volume', treatment: 'Anti-Aging & Botox', duration: '30 min', code: 'botox', resultText: 'FDA-approved neuromodulators and fillers restore volume while preserving expressions.' }
+    ];
+
+    const EDUCATION_TIMELINE = [
+      {
+        year: '2005 - 2010',
+        title: 'MBBS & MD Dermatology',
+        institution: 'Grant Medical College, Mumbai',
+        desc: 'Graduated with Gold Medal honors. Specialized in South Asian skin-type laser mechanics.'
+      },
+      {
+        year: '2011 - 2012',
+        title: 'Fellowship in Cosmetic Dermatology',
+        institution: 'University of Miami Miller School of Medicine, USA',
+        desc: 'Trained under global leaders in anti-aging injection techniques and skin barrier biology.'
+      },
+      {
+        year: '2014 - Present',
+        title: 'Founded DermaCare Luxe',
+        institution: 'Bandra West, Mumbai',
+        desc: 'Built Mumbai\'s award-winning boutique clinical space combining scientific precision with premium spa comfort.'
+      }
+    ];
+
+    const GALLERY_DATA = [
+      {
+        id: 1,
+        title: 'Severe Inflammatory Acne scars',
+        category: 'Acne',
+        desc: 'Treated over 4 sessions of RF Microneedling and Mandelic peels.',
+        beforeImg: 'images/acne_before.png',
+        afterImg: 'images/acne_after.png',
+        beforeLabel: 'Severe texture & active redness',
+        afterLabel: 'Completely smoothed, healthy skin barrier'
+      },
+      {
+        id: 2,
+        title: 'Melasma & Sun Spot Correction',
+        category: 'Pigmentation',
+        desc: 'Cleared using Q-Switched laser toning and botanical micro-infusions.',
+        beforeImg: 'images/melasma_before.png',
+        afterImg: 'images/melasma_after.png',
+        beforeLabel: 'Patchy brown cheek melasma',
+        afterLabel: 'Bright, uniform radiant glow'
+      },
+      {
+        id: 3,
+        title: 'Advanced Male Pattern Thinning',
+        category: 'Hair',
+        desc: 'Visible results after 5 sessions of Autologous PRP Scalp therapy.',
+        beforeImg: 'images/hair_before.png',
+        afterImg: 'images/hair_after.png',
+        beforeLabel: 'Sparse scalp hairline density',
+        afterLabel: 'Thicker crowns and stronger roots'
+      }
+    ];
+
+    const TESTIMONIALS_DATA = [
+      {
+        name: 'Ananya Mehta',
+        treatment: 'Acne & Scar Treatment',
+        review: 'Dr. Priya transformed my skin. I carried severe scars for 5 years that made me self-conscious. After 4 sessions of RF needling, my skin is smooth and glowing!',
+        initials: 'AM',
+        color: 'from-primary to-slate-800'
+      },
+      {
+        name: 'Rohan Sharma',
+        treatment: 'Hair Loss Therapy (PRP)',
+        review: 'Incredibly hygienic clinic and clinical staff. Dr. Priya explained the science behind scalp growth factors. Visible density within 3 months.',
+        initials: 'RS',
+        color: 'from-[#14B8A6] to-teal-700'
+      },
+      {
+        name: 'Priyanka Sen',
+        treatment: 'Pigmentation Correction',
+        review: 'Post-pregnancy melasma had completely covered my cheeks. Dr. Priya\'s laser protocols cleared it, leaving my skin even and hydrated.',
+        initials: 'PS',
+        color: 'from-accentDark to-amber-800'
+      }
+    ];
+
+    const FAQ_DATA = [
+      {
+        q: 'What distinguishes DermaCare Luxe from basic clinical centers?',
+        a: 'We combine board-certified medical dermatology expertise with world-class, US-FDA approved technologies. We do not use cookie-cutter plans; every chemical formula, laser pulse, and booster injection is mathematically tailored to your individual skin properties.'
+      },
+      {
+        q: 'How long do anti-aging fillers and Botox results last?',
+        a: 'Neuromodulators (Botox) typically maintain smooth results for 4 to 6 months. Hyaluronic acid dermal fillers generally retain volume and shape for 9 to 15 months, depending on the dynamic movement of the treated area.'
+      },
+      {
+        q: 'What is the absolute post-care routine for laser treatments?',
+        a: 'You must apply our soothing barrier cream, avoid direct direct sun exposure for 72 hours, and apply a broad-spectrum SPF 50+ mineral sunscreen daily. Avoid exfoliating acids (AHA/BHA/Retinol) for 7 days.'
+      },
+      {
+        q: 'Does it hurt to get PRP or dermal booster micro-injections?',
+        a: 'Your comfort is our priority. We apply a premium topical numbing anesthetic cream for 45 minutes prior to any micro-injections, ensuring the experience is virtually painless, feeling like a minor pressure sensation.'
+      }
+    ];
+
+    // ==========================================
+    // 2. ANIMATION & SYSTEM HOOKS
+    // ==========================================
+
+    const useInView = (options = {}) => {
+      const ref = useRef(null);
+      const [isInView, setIsInView] = useState(false);
+
+      useEffect(() => {
+        if (!ref.current) return;
+        const observer = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            if (options.triggerOnce) {
+              observer.unobserve(entry.target);
+            }
+          } else {
+            if (!options.triggerOnce) {
+              setIsInView(false);
+            }
+          }
+        }, { threshold: 0.1, ...options });
+
+        observer.observe(ref.current);
+        return () => observer.disconnect();
+      }, [options.triggerOnce]);
+
+      return [ref, isInView];
+    };
+
+    const MotionDiv = ({ children, className = '', delay = 0, duration = 600, ...props }) => {
+      const [ref, isInView] = useInView({ triggerOnce: true });
+      const delayStyle = { transitionDelay: `${delay}ms`, transitionDuration: `${duration}ms` };
+      return (
+        <div 
+          ref={ref} 
+          className={`transition-all duration-[750ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isInView ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-[0.97] pointer-events-none'
+          } ${className}`} 
+          style={delayStyle} 
+          {...props}
+        >
+          {children}
+        </div>
+      );
+    };
+
+    const Icon = ({ name, className = '', ariaLabel }) => {
+      useEffect(() => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }, [name]);
+      return (
+        <span className="inline-flex items-center justify-center shrink-0">
+          <i data-lucide={name} className={className} aria-label={ariaLabel}></i>
+        </span>
+      );
+    };
+
+    const AnimatedCounter = ({ value, duration = 2000 }) => {
+      const [count, setCount] = useState(0);
+      const ref = useRef(null);
+      const [hasAnimated, setHasAnimated] = useState(false);
+
+      useEffect(() => {
+        const observer = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting && !hasAnimated) {
+            setHasAnimated(true);
+            let start = null;
+            const end = parseInt(value.replace(/,/g, ''), 10);
+            
+            const step = (timestamp) => {
+              if (!start) start = timestamp;
+              const elapsed = timestamp - start;
+              const progress = Math.min(elapsed / duration, 1);
+              const easeOut = 1 - Math.pow(1 - progress, 4); // Quartic ease out
+              setCount(Math.floor(easeOut * end));
+              
+              if (progress < 1) {
+                window.requestAnimationFrame(step);
+              } else {
+                setCount(end);
+              }
+            };
+            window.requestAnimationFrame(step);
+          }
+        }, { threshold: 0.1 });
+
+        if (ref.current) observer.observe(ref.current);
+        return () => observer.disconnect();
+      }, [value, duration, hasAnimated]);
+
+      return (
+        <span ref={ref} className="tabular-nums">
+          {count.toLocaleString()}{value.includes('+') ? '+' : value.includes('%') ? '%' : ''}
+        </span>
+      );
+    };
+
+    // ==========================================
+    // 3. SPECIAL TOUCH-ACTIVE SLIDER
+    // ==========================================
+    const BeforeAfterSlider = ({ item }) => {
+      const [sliderPosition, setSliderPosition] = useState(50);
+      const containerRef = useRef(null);
+      const [isDragging, setIsDragging] = useState(false);
+
+      const handleMove = useCallback((clientX) => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const position = Math.max(0, Math.min(100, (x / rect.width) * 100));
+        setSliderPosition(position);
+      }, []);
+
+      const handleMouseMove = useCallback((e) => {
+        if (!isDragging) return;
+        handleMove(e.clientX);
+      }, [isDragging, handleMove]);
+
+      const handleTouchMove = useCallback((e) => {
+        if (!isDragging) return;
+        if (e.touches && e.touches[0]) {
+          handleMove(e.touches[0].clientX);
+        }
+      }, [isDragging, handleMove]);
+
+      const handleStart = () => setIsDragging(true);
+      const handleStop = () => setIsDragging(false);
+
+      useEffect(() => {
+        if (isDragging) {
+          window.addEventListener('mouseup', handleStop);
+          window.addEventListener('touchend', handleStop);
+        }
+        return () => {
+          window.removeEventListener('mouseup', handleStop);
+          window.removeEventListener('touchend', handleStop);
+        };
+      }, [isDragging]);
+
+      return (
+        <div 
+          ref={containerRef} 
+          className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-double select-none touch-none cursor-ew-resize border border-[#DFBA84]/20 z-10 no-select"
+          onMouseDown={handleStart}
+          onTouchStart={handleStart}
+          onMouseMove={handleMouseMove}
+          onTouchMove={handleTouchMove}
+        >
+          {/* Before view (Bottom layer) */}
+          <div className="absolute inset-0 bg-slate-900 flex items-center justify-center select-none">
+            <img src={item.beforeImg} className="w-full h-full object-cover" alt="Before skin condition" />
+            <div className="absolute inset-0 bg-[#0B1E36]/15"></div>
+            <span className="absolute bottom-4 left-4 bg-primary/95 text-white font-sans font-bold text-xs uppercase tracking-widest px-3.5 py-1.5 rounded-full backdrop-blur-md shadow-md z-10 border border-white/20">Before</span>
+          </div>
+
+          {/* After view (Top Layer, dynamic width clip) */}
+          <div 
+            className="absolute inset-0 overflow-hidden border-r-2 border-[#DFBA84] select-none z-10" 
+            style={{ width: `${sliderPosition}%` }}
+          >
+            <div className="absolute inset-0 bg-slate-900 w-full h-full flex items-center justify-center select-none" style={{ width: containerRef.current ? containerRef.current.offsetWidth : '100%' }}>
+              <img src={item.afterImg} className="w-full h-full object-cover animate-pulse-once" alt="After skin treatment" />
+              <span className="absolute bottom-4 left-4 bg-secondary/95 text-white font-sans font-bold text-xs uppercase tracking-widest px-3.5 py-1.5 rounded-full backdrop-blur-md shadow-md z-10 border border-white/20">After Treatment</span>
+            </div>
+          </div>
+
+          {/* Golden tactile swipe slider track */}
+          <div 
+            className="absolute top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent via-white to-accent flex items-center justify-center z-30 pointer-events-none"
+            style={{ left: `${sliderPosition}%` }}
+          >
+            <div className="w-9 h-9 rounded-full bg-white text-primary border-2 border-accent shadow-premium flex items-center justify-center pointer-events-auto hover:scale-105 active:scale-95 transition-transform duration-200">
+              <Icon name="chevron-left-right" className="w-5 h-5 text-accent" />
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 4. MAIN INTERACTIVE CORE LAYOUT COMPONENTS
+    // ==========================================
+
+    /* ==========================================
+       Sticky Capsule Navbar
+       ========================================== */
+    const Navbar = ({ activeSection, onBookAppointmentClick }) => {
+      const [isScrolled, setIsScrolled] = useState(false);
+      const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+      useEffect(() => {
+        const handleScroll = () => setIsScrolled(window.scrollY > 30);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+
+      const navItems = [
+        { label: 'Home', anchor: '#home' },
+        { label: 'About', anchor: '#about' },
+        { label: 'Services', anchor: '#services' },
+        { label: 'Gallery', anchor: '#gallery' },
+        { label: 'Testimonials', anchor: '#testimonials' },
+      ];
+
+      return (
+        <header className="fixed top-0 inset-x-0 z-50 px-4 sm:px-6 lg:px-8 py-4 transition-all duration-300">
+          {/* Navigation Capsule bar */}
+          <nav className={`max-w-7xl mx-auto rounded-full transition-all duration-500 flex justify-between items-center px-6 sm:px-8 py-3.5 border ${
+            isScrolled 
+              ? 'bg-primary/95 backdrop-blur-xl border-white/10 shadow-premium' 
+              : 'bg-[#FAF6EE]/90 backdrop-blur-md border-slate-200/40 shadow-glass'
+          }`}>
+            
+            {/* Clinic Logo */}
+            <a href="#home" className="flex items-center gap-3 group focus:ring-2 focus:ring-accent rounded-full px-2">
+              <div className={`p-2 rounded-full transition-colors duration-300 ${
+                isScrolled ? 'bg-white/10' : 'bg-primary/5'
+              }`}>
+                <Icon name="sparkles" className={`w-5 h-5 ${isScrolled ? 'text-accent' : 'text-primary'}`} />
+              </div>
+              <div className="text-left">
+                <span className={`font-serif text-lg sm:text-xl font-bold tracking-tight ${isScrolled ? 'text-white' : 'text-slate-800'}`}>DermaCare <span className="text-accent">Luxe</span></span>
+                <p className="text-[8px] tracking-[0.2em] text-slate-400 font-sans uppercase font-bold">Skin &amp; Laser Clinic</p>
+              </div>
+            </a>
+
+            {/* Desktop Navigation Links */}
+            <div className="hidden lg:flex items-center gap-8">
+              {navItems.map((item) => {
+                const isActive = activeSection === item.anchor.substring(1);
+                return (
+                  <a
+                    key={item.label}
+                    href={item.anchor}
+                    className={`font-sans text-xs uppercase tracking-widest font-bold transition-all py-1.5 focus:ring-2 focus:ring-accent rounded-md px-1 relative ${
+                      isScrolled 
+                        ? isActive ? 'text-accent' : 'text-slate-300 hover:text-white'
+                        : isActive ? 'text-primary' : 'text-slate-650 hover:text-primary'
+                    }`}
+                  >
+                    {item.label}
+                    {isActive && (
+                      <span className="absolute bottom-0 inset-x-1 h-[2px] bg-accent rounded-full shadow-goldGlow animate-pulse"></span>
+                    )}
+                  </a>
+                );
+              })}
+            </div>
+
+            {/* Book Appointment CTA */}
+            <div className="hidden lg:block">
+              <button
+                onClick={onBookAppointmentClick}
+                className="bg-gradient-to-r from-accent via-accentDark to-accent text-primary font-sans font-bold text-xs uppercase tracking-wider px-6 py-2.5 rounded-full hover:scale-105 active:scale-95 transition-all shadow-goldGlow hover:shadow-lg focus:ring-2 focus:ring-accent"
+              >
+                Book Appointment
+              </button>
+            </div>
+
+            {/* Mobile Drawer Trigger */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`lg:hidden p-2 rounded-full focus:ring-2 focus:ring-accent ${
+                isScrolled ? 'text-white' : 'text-slate-700'
+              }`}
+              aria-label="Toggle navigation drawer"
+            >
+              <Icon name={isMobileMenuOpen ? 'x' : 'menu'} className="w-5 h-5" />
+            </button>
+          </nav>
+
+          {/* Mobile slide-down menu */}
+          <div className={`lg:hidden fixed inset-x-4 top-[85px] bg-primary/95 backdrop-blur-xl border border-white/10 shadow-premium rounded-3xl transition-all duration-300 origin-top ${
+            isMobileMenuOpen ? 'opacity-100 scale-100 py-6' : 'opacity-0 scale-95 pointer-events-none'
+          }`}>
+            <div className="flex flex-col gap-3.5 px-6">
+              {navItems.map((item) => {
+                const isActive = activeSection === item.anchor.substring(1);
+                return (
+                  <a
+                    key={item.label}
+                    href={item.anchor}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`font-sans text-sm uppercase tracking-widest font-bold py-2 border-b border-white/5 transition-colors ${
+                      isActive ? 'text-accent' : 'text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onBookAppointmentClick();
+                }}
+                className="bg-gradient-to-r from-accent via-accentDark to-accent text-primary font-sans font-bold text-xs uppercase tracking-wider py-3.5 rounded-full mt-4 shadow-goldGlow"
+              >
+                Book Appointment
+              </button>
+            </div>
+          </div>
+        </header>
+      );
+    };
+
+    /* ==========================================
+       Hero Section with Concern Selector
+       ========================================== */
+    const Hero = ({ onBookClick, onViewTreatmentsClick, onBookSpecialty }) => {
+      const [activeConcernIdx, setActiveConcernIdx] = useState(0);
+      const activeQuiz = QUIZ_QUESTIONS[activeConcernIdx];
+
+      return (
+        <section id="home" className="relative min-h-screen flex items-center justify-center pt-28 pb-20 overflow-hidden mesh-gradient">
+          {/* Luminous dynamic auroras */}
+          <div className="absolute top-1/4 -left-48 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 -right-48 w-[400px] h-[400px] bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }}></div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full z-10 relative">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+              
+              {/* Text column (Left) */}
+              <div className="lg:col-span-7 flex flex-col items-start text-left">
+                
+                {/* Board badge */}
+                <MotionDiv delay={0} className="inline-flex items-center gap-2 bg-primary/5 border border-primary/10 text-primary font-sans font-bold text-[10px] sm:text-xs tracking-widest uppercase rounded-full px-4.5 py-2.5 mb-6">
+                  <span className="w-2 h-2 rounded-full bg-secondary animate-ping"></span> Board-Certified Dermatologist
+                </MotionDiv>
+
+                {/* Main title */}
+                <MotionDiv delay={100}>
+                  <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-medium text-primary leading-[1.1] mb-6">
+                    Aesthetic Science <br />
+                    <span className="font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-accentDark via-accent to-secondary">
+                      Timeless Results
+                    </span>
+                  </h1>
+                </MotionDiv>
+
+                {/* Subtitle */}
+                <MotionDiv delay={200}>
+                  <p className="text-slate-600 font-sans text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mb-8">
+                    Discover elite clinical skincare and non-surgical facial rejuvenation designed around your skin's cellular profile in Bandra West, Mumbai.
+                  </p>
+                </MotionDiv>
+
+                {/* Stylish tactual CTAs */}
+                <MotionDiv delay={300} className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-12">
+                  <button
+                    onClick={onBookClick}
+                    className="bg-gradient-to-r from-accent via-accentDark to-accent text-primary font-sans font-bold text-xs uppercase tracking-widest px-8 py-4 rounded-full hover:scale-105 active:scale-95 transition-all shadow-goldGlow hover:shadow-lg border border-accent/20"
+                  >
+                    Schedule Free Visit
+                  </button>
+                  <button
+                    onClick={onViewTreatmentsClick}
+                    className="glass-card hover:bg-[#FAF9F6] text-primary border border-primary/10 font-sans font-bold text-xs uppercase tracking-widest px-8 py-4 rounded-full hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-glass"
+                  >
+                    Explore Services <Icon name="arrow-right" className="w-4 h-4 text-primary" />
+                  </button>
+                </MotionDiv>
+
+                {/* Marquee trust badges */}
+                <MotionDiv delay={400} className="w-full">
+                  <div className="border-t border-slate-200/50 pt-6 flex flex-wrap gap-x-6 gap-y-3.5 text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    <span className="flex items-center gap-1.5"><Icon name="check-circle-2" className="w-4 h-4 text-[#14B8A6]" /> FAAD Certified</span>
+                    <span className="flex items-center gap-1.5"><Icon name="users" className="w-4 h-4 text-[#14B8A6]" /> 10K+ Treated</span>
+                    <span className="flex items-center gap-1.5"><Icon name="sparkles" className="w-4 h-4 text-[#14B8A6]" /> ISO 9001 Facility</span>
+                  </div>
+                </MotionDiv>
+
+              </div>
+
+              {/* Concern Diagnostic Widget (Right Column) */}
+              <div className="lg:col-span-5 flex justify-center">
+                <MotionDiv delay={200} className="w-full max-w-md bg-white border border-slate-100 rounded-3xl p-6 shadow-premium relative">
+                  
+                  {/* Floating badge */}
+                  <div className="absolute -top-3.5 right-6 bg-secondary text-white font-sans font-bold text-[9px] uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-md">
+                    Instant Skin Quiz
+                  </div>
+
+                  <h3 className="font-serif text-lg font-bold text-primary mb-1.5 text-left">Identify Your Concern</h3>
+                  <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-5 text-left">Select a symptom for diagnostic recommendation</p>
+                  
+                  {/* Symptom pills */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {QUIZ_QUESTIONS.map((item, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveConcernIdx(idx)}
+                        className={`font-sans font-bold text-[10px] sm:text-xs px-3.5 py-2.5 rounded-xl border transition-all ${
+                          activeConcernIdx === idx
+                            ? 'bg-primary text-white border-primary shadow-md'
+                            : 'bg-[#FAF9F6] text-slate-650 border-slate-200/60 hover:bg-slate-100'
+                        }`}
+                      >
+                        {item.concern}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Diagnostic Output Frame */}
+                  <div className="bg-[#FAF9F6] border border-slate-155 rounded-2xl p-4.5 text-left transition-all duration-300">
+                    <span className="text-[9px] font-bold text-secondary uppercase tracking-widest block mb-1">Dermatologist Recommended Treatment</span>
+                    <h4 className="font-serif text-base sm:text-lg font-bold text-primary">{activeQuiz.treatment}</h4>
+                    <p className="text-xs text-slate-500 font-sans mt-2 leading-relaxed">
+                      {activeQuiz.resultText}
+                    </p>
+                    
+                    <div className="flex justify-between items-center border-t border-slate-200/50 pt-3.5 mt-4 text-xs font-sans">
+                      <span className="text-slate-400 font-medium">Session Duration: <strong className="text-slate-750 font-bold">{activeQuiz.duration}</strong></span>
+                      
+                      <button 
+                        onClick={() => onBookSpecialty(activeQuiz.treatment, activeQuiz.code)}
+                        className="bg-accent hover:bg-accentDark text-primary font-sans font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        View &amp; Book <Icon name="chevron-right" className="w-3 h-3 text-primary" />
+                      </button>
+                    </div>
+                  </div>
+
+                </MotionDiv>
+              </div>
+
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    /* ==========================================
+       Stats Component
+       ========================================== */
+    const Stats = () => {
+      const statsList = [
+        { value: '10,000+', label: 'Patients Cured', icon: 'heart-pulse' },
+        { value: '15+', label: 'Specialty Lasers', icon: 'zap' },
+        { value: '98%', label: 'Satisfaction Rate', icon: 'sparkles' },
+        { value: '10+', label: 'Years Experience', icon: 'award' }
+      ];
+
+      return (
+        <section className="bg-primary text-white py-12 relative overflow-hidden z-20">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.1),transparent_40%)]"></div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4">
+              {statsList.map((st, idx) => (
+                <div key={idx} className="flex flex-col items-center justify-center text-center p-3 border-r border-white/5 last:border-0 max-sm:border-r-0 max-sm:[&:nth-child(even)]:border-r-0 max-sm:[&:nth-child(odd)]:border-r max-sm:border-b max-sm:[&:nth-last-child(-n+2)]:border-b-0 max-sm:border-white/5">
+                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-2.5">
+                    <Icon name={st.icon} className="w-5 h-5 text-accent" />
+                  </div>
+                  <h4 className="text-xl sm:text-2xl font-sans font-black text-white">
+                    <AnimatedCounter value={st.value} />
+                  </h4>
+                  <p className="text-[10px] sm:text-xs font-sans font-bold text-slate-400 uppercase tracking-widest mt-1">{st.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    /* ==========================================
+       Luxury Doctor Profile & Credentials Timelines (Alabaster Cream BG)
+       ========================================== */
+    const About = () => {
+      const whyTrust = [
+        { icon: 'shield-check', title: '100% FDA-Approved', desc: 'Every peel formulation and laser grid utilizes gold-standard certified compounds.' },
+        { icon: 'activity', title: 'Cellular Skincare', desc: 'Therapeutic adjustments are mathematically scaled to match South Asian skin profiles.' },
+        { icon: 'heart-handshake', title: 'Continuous Post-Care Support', desc: 'Direct coordinator follow-ups and comprehensive medical support for 14 days after every treatment.' },
+        { icon: 'help-circle', title: 'Ethical Diagnostics', desc: 'Completely transparent counseling, straightforward costs, and zero secret charges.' }
+      ];
+
+      return (
+        <section id="about" className="py-24 bg-gradient-to-br from-[#FAF9F6] via-[#F6F0E5] to-[#FAF9F6] relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+              
+              {/* Doctor Graphics Column (Left) */}
+              <div className="lg:col-span-5 flex flex-col items-center">
+                <MotionDiv delay={0} className="relative w-full max-w-[340px] aspect-[4/5] rounded-3xl overflow-hidden p-1.5 bg-gradient-to-tr from-accent via-secondary to-primary shadow-double mb-8">
+                  {/* Styled internal container */}
+                  <div className="w-full h-full bg-[#FAF9F6] rounded-[22px] overflow-hidden flex flex-col items-center justify-center p-6 text-center relative">
+                    <div className="absolute top-4 right-4 bg-secondary/15 border border-secondary/20 text-secondary font-bold text-[9px] uppercase tracking-widest px-3 py-1 rounded-full z-10">
+                      FAAD Board Certified
+                    </div>
+                    
+                    <div className="relative">
+                      {/* Aura */}
+                      <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-[#DFBA84]/20 to-teal-500/20 blur-md"></div>
+                      <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-primary via-primary/95 to-accent text-white flex items-center justify-center font-serif text-5xl font-bold shadow-md relative z-10 border-4 border-white">
+                        PS
+                      </div>
+                    </div>
+
+                    <h4 className="font-serif text-2xl font-bold text-primary mt-5">Dr. Priya Sharma</h4>
+                    <p className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-400 mt-1">Dermatologist &amp; Laser Specialist</p>
+
+                    <div className="flex gap-2 mt-4.5">
+                      <span className="bg-primary/5 text-primary text-[10px] font-bold px-3 py-1 rounded-full border border-primary/10">Est. 2014</span>
+                      <span className="bg-secondary/5 text-secondary text-[10px] font-bold px-3 py-1 rounded-full border border-secondary/10">10K+ Cleared</span>
+                    </div>
+                  </div>
+                </MotionDiv>
+
+                {/* Timeline Box */}
+                <MotionDiv delay={150} className="w-full bg-white/90 backdrop-blur-md border border-slate-200/50 rounded-3xl p-6 shadow-sm">
+                  <h4 className="font-serif text-base sm:text-lg font-bold text-primary border-b border-slate-150 pb-3 mb-4 flex items-center gap-2">
+                    <Icon name="graduation-cap" className="w-5 h-5 text-accent" /> Professional Timeline
+                  </h4>
+                  <div className="space-y-6 text-left">
+                    {EDUCATION_TIMELINE.map((item, idx) => (
+                      <div key={idx} className="relative pl-6">
+                        {idx !== EDUCATION_TIMELINE.length - 1 && (
+                          <div className="absolute left-1.5 top-5 w-0.5 h-16 bg-slate-155"></div>
+                        )}
+                        <div className="absolute left-0 top-1.5 w-3 h-3 bg-white border-2 border-accent rounded-full"></div>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">{item.year}</span>
+                        <h5 className="font-sans font-bold text-slate-800 text-xs sm:text-sm">{item.title}</h5>
+                        <p className="text-[11px] font-bold text-secondary mt-0.5">{item.institution}</p>
+                        <p className="text-[11px] text-slate-505 text-slate-500 mt-1.5 leading-relaxed">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </MotionDiv>
+              </div>
+
+              {/* Text Info Column (Right) */}
+              <div className="lg:col-span-7 text-left">
+                <MotionDiv delay={50} className="mb-6">
+                  <span className="text-[10px] font-bold font-sans uppercase text-secondary tracking-widest block mb-2">Scientific Skincare</span>
+                  <h2 className="font-serif text-3xl sm:text-4xl font-medium text-primary leading-tight">
+                    Where Medical Integrity <br />
+                    <span className="italic text-accent">Meets Aesthetic Luxury</span>
+                  </h2>
+                  <div className="w-12 h-1.5 bg-accent rounded-full mt-4"></div>
+                </MotionDiv>
+
+                <MotionDiv delay={150} className="text-slate-650 font-sans text-sm sm:text-base leading-relaxed space-y-4 mb-10">
+                  <p>
+                    <strong>Dr. Priya Sharma, MD, FAAD</strong> holds the conviction that beautiful skin is simply an outward expression of scientific cellular health. By utilizing certified, advanced light and chemical formulas, our Bandra clinic guides patients toward flawless, long-term skin health.
+                  </p>
+                  <p>
+                    With specialized clinical training in **Miami (USA)**, she has optimized therapeutic laser parameters to be perfectly safe and highly potent for South Asian skin traits.
+                  </p>
+                </MotionDiv>
+
+                {/* Values grids */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {whyTrust.map((item, idx) => (
+                    <MotionDiv key={idx} delay={250 + idx * 50} className="glass-card rounded-2xl p-5 hover:border-secondary/25 hover:shadow-premium transition-all duration-300">
+                      <div className="bg-secondary/10 w-9 h-9 rounded-xl flex items-center justify-center text-secondary mb-3">
+                        <Icon name={item.icon} className="w-4.5 h-4.5 text-secondary" />
+                      </div>
+                      <h5 className="font-sans font-bold text-slate-850 text-xs sm:text-sm mb-1.5">{item.title}</h5>
+                      <p className="text-[11px] text-slate-550 leading-relaxed">{item.desc}</p>
+                    </MotionDiv>
+                  ))}
+                </div>
+
+                {/* Certification badging */}
+                <MotionDiv delay={500} className="mt-10 border-t border-slate-200/50 pt-8 flex flex-wrap gap-6 items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center border border-accent/20 text-accentDark font-bold text-xs uppercase shadow-sm">
+                      FAAD
+                    </div>
+                    <div>
+                      <h6 className="text-xs font-bold text-primary font-sans leading-tight">Fellow, American Academy</h6>
+                      <p className="text-[9px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5">Dermatology USA</p>
+                    </div>
+                  </div>
+                  <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-secondary/15 flex items-center justify-center border border-secondary/20 text-secondary font-bold text-xs uppercase shadow-sm">
+                      ISO
+                    </div>
+                    <div>
+                      <h6 className="text-xs font-bold text-primary font-sans leading-tight">ISO 9001 Certified</h6>
+                      <p className="text-[9px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5">Clinical Standards</p>
+                    </div>
+                  </div>
+                </MotionDiv>
+              </div>
+
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    /* ==========================================
+       Premium Services Grid (Celadon Mist BG)
+       ========================================== */
+    const Services = ({ onLearnMoreClick }) => {
+      return (
+        <section id="services" className="py-24 bg-gradient-to-tr from-[#E6F4F1] via-[#FAF9F6] to-[#E6F4F1] relative overflow-hidden border-y border-slate-200/40">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            
+            {/* Header */}
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <span className="inline-block bg-secondary/10 border border-secondary/20 text-secondary font-sans font-bold text-xs tracking-widest uppercase rounded-full px-4 py-2 mb-3">
+                Clinical Treatments
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-medium text-primary leading-tight">
+                Advanced Scientific Solutions
+              </h2>
+              <p className="text-slate-500 font-sans text-xs sm:text-sm mt-3 leading-relaxed">
+                Combining FDA-approved laser technology with medical chemistry to repair, protect, and illuminate.
+              </p>
+            </div>
+
+            {/* Grid of Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {SERVICES_DATA.map((service, idx) => (
+                <MotionDiv
+                  key={service.id}
+                  delay={idx * 40}
+                  className="glass-card rounded-3xl p-6 flex flex-col justify-between hover:translate-y-[-4px] hover:shadow-premium hover:border-secondary/20 hover:bg-white transition-all duration-300 group"
+                >
+                  <div className="text-left">
+                    <div className="w-11 h-11 rounded-2xl bg-[#0B1E36] text-white flex items-center justify-center shadow-md mb-5 group-hover:scale-105 transition-transform duration-300">
+                      <Icon name={service.icon} className="w-5 h-5 text-accent" />
+                    </div>
+                    
+                    {/* Efficacy Pill overlay */}
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{service.category}</span>
+                      <span className="bg-secondary/10 text-secondary font-bold text-[9px] px-2 py-0.5 rounded-full">Efficacy: {service.efficacy}</span>
+                    </div>
+
+                    <h3 className="font-serif text-lg font-bold text-primary mb-2.5 group-hover:text-secondary transition-colors">
+                      {service.name}
+                    </h3>
+                    <p className="text-slate-500 font-sans text-xs sm:text-sm leading-relaxed mb-6">
+                      {service.desc}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => onLearnMoreClick(service)}
+                    className="font-sans font-bold text-xs text-primary flex items-center gap-1.5 py-1.5 focus:ring-2 focus:ring-secondary rounded w-fit hover:text-secondary transition-colors group/btn"
+                  >
+                    View Procedure Details <Icon name="arrow-right" className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                  </button>
+                </MotionDiv>
+              ))}
+            </div>
+
+          </div>
+        </section>
+      );
+    };
+
+    /* ==========================================
+       Service Procedure Detail Modal
+       ========================================== */
+    const ServiceModal = ({ service, onClose, onBookTreatment }) => {
+      if (!service) return null;
+
+      return (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+          <div onClick={onClose} className="fixed inset-0 bg-[#0B1E36]/75 backdrop-blur-sm transition-opacity duration-300"></div>
+
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-premium relative z-10 transform transition-all duration-300 scale-100 opacity-100 flex flex-col gap-6 text-left max-h-[90vh] overflow-y-auto border border-slate-100">
+            {/* Close */}
+            <button
+              onClick={onClose}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200/80 p-2 rounded-full transition-colors focus:ring-2 focus:ring-secondary"
+              aria-label="Close procedure modal"
+            >
+              <Icon name="x" className="w-5 h-5" />
+            </button>
+
+            {/* Header info */}
+            <div className="flex items-center gap-4 border-b border-slate-100 pb-4 pr-8">
+              <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0">
+                <Icon name={service.icon} className="w-6 h-6 text-accent" />
+              </div>
+              <div>
+                <span className="text-[9px] font-bold text-secondary uppercase tracking-widest">{service.category} Clinic Protocol</span>
+                <h3 className="font-serif text-xl sm:text-2xl font-bold text-primary leading-tight">{service.name}</h3>
+              </div>
+            </div>
+
+            {/* Technical text */}
+            <div className="text-slate-650 text-xs sm:text-sm leading-relaxed space-y-4">
+              <h5 className="font-bold text-primary text-sm sm:text-base">Scientific Procedure Overview:</h5>
+              <p>{service.fullDetails}</p>
+            </div>
+
+            {/* Clinic parameters */}
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 border border-slate-100 rounded-2xl p-4 sm:p-5 text-xs">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-slate-400 uppercase tracking-widest">Duration</span>
+                <span className="font-bold text-primary text-sm">{service.duration}</span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-slate-400 uppercase tracking-widest">Sessions Needed</span>
+                <span className="font-bold text-primary text-sm">{service.sessions}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 border-t border-slate-200/50 pt-3">
+                <span className="font-semibold text-slate-400 uppercase tracking-widest">Recovery Time</span>
+                <span className="font-bold text-primary text-sm">{service.recovery}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 border-t border-slate-200/50 pt-3">
+                <span className="font-semibold text-slate-400 uppercase tracking-widest">Clinical Success Efficacy</span>
+                <span className="font-bold text-secondary text-sm">{service.efficacy} Clearance</span>
+              </div>
+            </div>
+
+            {/* CTA action row */}
+            <div className="flex flex-col sm:flex-row gap-3 items-center justify-end border-t border-slate-100 pt-5">
+              <button
+                onClick={onClose}
+                className="w-full sm:w-auto font-sans font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-6 py-3 rounded-full text-xs uppercase tracking-wider text-center transition-all focus:ring-2 focus:ring-slate-350"
+              >
+                Close Window
+              </button>
+              <button
+                onClick={() => onBookTreatment(service.name, service.id)}
+                className="w-full sm:w-auto font-sans font-bold text-primary bg-gradient-to-r from-accent to-accentDark shadow-goldGlow px-8 py-3 rounded-full text-xs uppercase tracking-widest text-center transition-all hover:scale-103 active:scale-97 focus:ring-2 focus:ring-accent"
+              >
+                Book Treatment Now
+              </button>
+            </div>
+
+          </div>
+        </div>
+      );
+    };
+
+    /* ==========================================
+       Why Choose Us Section (STUNNING Dark Midnight Blue BG)
+       ========================================== */
+    const WhyUs = () => {
+      const clinicFeatures = [
+        { icon: 'cpu', title: 'FDA Gold-Standard Systems', desc: 'Outfitted with top-tier laser mechanics from global scientific leaders.' },
+        { icon: 'check-circle-2', title: 'FDA-Approved Formulations', desc: 'We strictly administer tested, non-toxic organic compounds.' },
+        { icon: 'user-check', title: 'Targeted Dermal Plans', desc: 'Therapeutic paths customized based on computerized skin scanners.' },
+        { icon: 'shield-alert', title: 'Sterile Care Space', desc: 'Clean, boutique surgical suites with hospital-grade sanitization protocols.' },
+        { icon: 'book-open', title: 'Transparent Procedures', desc: 'No complex schedules or secret tariffs. Complete cost transparency.' },
+        { icon: 'award', title: 'Clinical Expertise', desc: 'Led by a double-certified MD with extensive US aesthetic training.' }
+      ];
+
+      return (
+        <section className="py-24 bg-gradient-to-br from-[#0B1E36] via-[#071424] to-[#0B1E36] text-white relative border-y border-white/5 shadow-inner">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(20,184,166,0.08),transparent_40%)]"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            {/* Header */}
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <span className="inline-block bg-white/5 border border-white/10 text-accent font-sans font-bold text-xs tracking-widest uppercase rounded-full px-4 py-2 mb-3">
+                Clinic Integrity
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-medium text-white leading-tight">
+                Advanced Safety Frameworks
+              </h2>
+            </div>
+
+            {/* Grid of features */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {clinicFeatures.map((item, idx) => (
+                <MotionDiv
+                  key={idx}
+                  delay={idx * 40}
+                  className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-accent/40 hover:bg-white/10 transition-all duration-300 flex gap-4 text-left group"
+                >
+                  <div className="bg-white/5 text-accent w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-accent group-hover:text-primary transition-all duration-300">
+                    <Icon name={item.icon} className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-sans font-bold text-white text-sm mb-1.5">{item.title}</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
+                  </div>
+                </MotionDiv>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    /* ==========================================
+       Interactive Before & After Swiping Gallery (Pearl Cashmere BG)
+       ========================================== */
+    const Gallery = () => {
+      const [activeTab, setActiveTab] = useState('All');
+      const tabs = ['All', 'Acne', 'Pigmentation', 'Hair'];
+
+      const filteredItems = activeTab === 'All'
+        ? GALLERY_DATA
+        : GALLERY_DATA.filter((g) => g.category === activeTab);
+
+      return (
+        <section id="gallery" className="py-24 bg-gradient-to-br from-[#FAF9F6] via-[#F4EFE5] to-[#FAF9F6] relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            {/* Header */}
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="inline-block bg-secondary/10 border border-secondary/20 text-secondary font-sans font-bold text-xs tracking-widest uppercase rounded-full px-4 py-2 mb-3">
+                Swipe Results
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-medium text-primary leading-tight">
+                Authentic Case Transformations
+              </h2>
+              <p className="text-slate-500 font-sans text-xs mt-3 leading-relaxed">
+                Drag the gold slider bar horizontally on any card to compare the patient's skin texture before and after Dr. Priya's targeted clinical therapy.
+              </p>
+            </div>
+
+            {/* Filter controls */}
+            <div className="flex flex-wrap justify-center gap-3.5 mb-12">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`font-sans font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-full transition-all focus:ring-2 focus:ring-secondary ${
+                    activeTab === tab
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-white text-slate-655 border border-slate-200/50 hover:bg-slate-50 shadow-sm'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Grid display with real slider */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredItems.map((item) => (
+                <MotionDiv
+                  key={item.id}
+                  delay={100}
+                  className="glass-card rounded-3xl p-5 flex flex-col justify-between shadow-sm hover:shadow-premium hover:border-accent/15 transition-all duration-300"
+                >
+                  <div>
+                    {/* Active Drag Slider Component */}
+                    <BeforeAfterSlider item={item} />
+
+                    {/* Metadata text */}
+                    <div className="text-left mt-5 pr-2">
+                      <span className="bg-primary/5 text-primary border border-primary/10 font-sans font-bold text-[9px] uppercase tracking-widest rounded-full px-2.5 py-1 inline-block mb-2.5">
+                        {item.category} Case
+                      </span>
+                      <h4 className="font-serif text-base sm:text-lg font-bold text-primary leading-tight">
+                        {item.title}
+                      </h4>
+                      <p className="text-slate-500 font-sans text-xs mt-1.5 leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </MotionDiv>
+              ))}
+            </div>
+
+          </div>
+        </section>
+      );
+    };
+
+    /* ==========================================
+       Interactive Progressive Booking Terminal & Map (Teal-Gold Mesh BG)
+       ========================================== */
+    const Booking = ({ selectedService, onSubmitSuccess }) => {
+      const [currentStep, setCurrentStep] = useState(1);
+      const [formData, setFormData] = useState({
+        name: '',
+        phone: '',
+        email: '',
+        date: '',
+        treatment: '',
+        message: ''
+      });
+      const [errors, setErrors] = useState({});
+
+      useEffect(() => {
+        if (selectedService) {
+          setFormData((prev) => ({ ...prev, treatment: selectedService }));
+          setCurrentStep(1); // Set to step 1 so they see the pre-selection
+        }
+      }, [selectedService]);
+
+      const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+          setErrors((prev) => ({ ...prev, [name]: null }));
+        }
+      };
+
+      const validateStep1 = () => {
+        const err = {};
+        if (!formData.treatment) err.treatment = 'Please select a treatment service';
+        setErrors(err);
+        return Object.keys(err).length === 0;
+      };
+
+      const validateStep2 = () => {
+        const err = {};
+        if (!formData.date) err.date = 'Preferred date is required';
+        setErrors(err);
+        return Object.keys(err).length === 0;
+      };
+
+      const validateStep3 = () => {
+        const err = {};
+        if (!formData.name.trim()) err.name = 'Full name is required';
+        if (!formData.phone.trim()) {
+          err.phone = 'Phone number is required';
+        } else if (!/^\+?[0-9\s-]{10,14}$/.test(formData.phone.trim())) {
+          err.phone = 'Please enter a valid phone number';
+        }
+        if (!formData.email.trim()) {
+          err.email = 'Email address is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+          err.email = 'Please enter a valid email address';
+        }
+
+        setErrors(err);
+        return Object.keys(err).length === 0;
+      };
+
+      const handleNext = () => {
+        if (currentStep === 1 && validateStep1()) setCurrentStep(2);
+        if (currentStep === 2 && validateStep2()) setCurrentStep(3);
+      };
+
+      const handlePrev = () => {
+        setCurrentStep((prev) => Math.max(1, prev - 1));
+      };
+
+      const handleFormSubmit = (e) => {
+        e.preventDefault();
+        if (validateStep3()) {
+          onSubmitSuccess(formData.name);
+          setFormData({ name: '', phone: '', email: '', date: '', treatment: '', message: '' });
+          setCurrentStep(1);
+        }
+      };
+
+      return (
+        <section id="contact" className="py-24 bg-gradient-to-br from-[#EEF7F6] via-[#FAF9F6] to-[#F2EFE9] relative overflow-hidden">
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+              
+              {/* Progressive Booking Form terminal */}
+              <div className="lg:col-span-7 text-left w-full">
+                <span className="inline-block bg-primary/5 border border-primary/10 text-primary font-sans font-bold text-xs tracking-widest uppercase rounded-full px-4.5 py-2.5 mb-3">
+                  Aesthetic Scheduler
+                </span>
+                <h2 className="font-serif text-3xl sm:text-4xl font-medium text-primary leading-tight">
+                  Book Your Skin Analysis
+                </h2>
+                <p className="text-slate-500 font-sans text-xs sm:text-sm mt-3 mb-8 leading-relaxed">
+                  Experience scientific, non-ablative skincare. Navigate our structural progressive booking terminal to schedule your slot.
+                </p>
+
+                {/* Progress Indicators */}
+                <div className="flex items-center gap-2 mb-8 bg-[#FAF6EE]/90 border border-slate-200/50 p-2 rounded-2xl">
+                  {[1, 2, 3].map((st) => (
+                    <div 
+                      key={st}
+                      className={`flex-grow text-center py-2.5 rounded-xl font-sans font-bold text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-300 ${
+                        currentStep === st 
+                          ? 'bg-primary text-white shadow-sm'
+                          : currentStep > st 
+                            ? 'bg-secondary/10 text-secondary' 
+                            : 'text-slate-400 font-medium'
+                      }`}
+                    >
+                      Step {st}: {st === 1 ? 'Concern' : st === 2 ? 'Schedule' : 'Details'}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-double">
+                  <form onSubmit={handleFormSubmit} className="space-y-6">
+                    
+                    {/* Step 1: Concern & Service */}
+                    {currentStep === 1 && (
+                      <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
+                        <h4 className="font-serif text-base font-bold text-primary mb-1">Select Skincare Concern</h4>
+                        <div className="flex flex-col text-left">
+                          <label htmlFor="treatment" className="text-xs font-bold text-slate-655 font-sans mb-2">Clinic Service <span className="text-red-500">*</span></label>
+                          <select
+                            id="treatment"
+                            name="treatment"
+                            value={formData.treatment}
+                            onChange={handleInputChange}
+                            className={`bg-[#FAF9F6] border ${errors.treatment ? 'border-red-400 focus:ring-red-200' : 'border-slate-150 focus:ring-secondary/20'} focus:border-secondary focus:bg-white rounded-xl px-4 py-3.5 text-xs sm:text-sm text-slate-600 transition-all focus:ring-4 focus:outline-none`}
+                          >
+                            <option value="">-- Choose target treatment --</option>
+                            {SERVICES_DATA.map((srv) => (
+                              <option key={srv.id} value={srv.name}>{srv.name} (Efficacy: {srv.efficacy})</option>
+                            ))}
+                          </select>
+                          {errors.treatment && <span className="text-red-500 text-[10px] font-bold mt-1.5 pl-1">{errors.treatment}</span>}
+                        </div>
+                        <div className="flex justify-end pt-4">
+                          <button
+                            type="button"
+                            onClick={handleNext}
+                            className="bg-primary hover:bg-slate-800 text-white font-sans font-bold text-xs uppercase tracking-wider px-8 py-3.5 rounded-full transition-transform active:scale-95 flex items-center gap-1.5 shadow"
+                          >
+                            Continue <Icon name="arrow-right" className="w-4 h-4 text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 2: Preferred Date */}
+                    {currentStep === 2 && (
+                      <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
+                        <h4 className="font-serif text-base font-bold text-primary mb-1">Select Consultation Date</h4>
+                        <div className="flex flex-col text-left">
+                          <label htmlFor="date" className="text-xs font-bold text-slate-655 font-sans mb-2">Preferred Appointment Date <span className="text-red-500">*</span></label>
+                          <input
+                            type="date"
+                            id="date"
+                            name="date"
+                            value={formData.date}
+                            onChange={handleInputChange}
+                            className={`bg-[#FAF9F6] border ${errors.date ? 'border-red-400 focus:ring-red-200' : 'border-slate-150 focus:ring-secondary/20'} focus:border-secondary focus:bg-white rounded-xl px-4 py-3.5 text-xs sm:text-sm text-slate-600 transition-all focus:ring-4 focus:outline-none`}
+                          />
+                          {errors.date && <span className="text-red-500 text-[10px] font-bold mt-1.5 pl-1">{errors.date}</span>}
+                        </div>
+                        <div className="flex justify-between pt-4">
+                          <button
+                            type="button"
+                            onClick={handlePrev}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-bold text-xs uppercase tracking-wider px-8 py-3.5 rounded-full transition-transform active:scale-95 flex items-center gap-1.5"
+                          >
+                            <Icon name="arrow-left" className="w-4 h-4" /> Back
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleNext}
+                            className="bg-primary hover:bg-slate-800 text-white font-sans font-bold text-xs uppercase tracking-wider px-8 py-3.5 rounded-full transition-transform active:scale-95 flex items-center gap-1.5 shadow"
+                          >
+                            Continue <Icon name="arrow-right" className="w-4 h-4 text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 3: Contact Details */}
+                    {currentStep === 3 && (
+                      <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
+                        <h4 className="font-serif text-base font-bold text-primary mb-1">Enter Contact Information</h4>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Name */}
+                          <div className="flex flex-col text-left">
+                            <label htmlFor="name" className="text-xs font-bold text-slate-655 font-sans mb-1.5">Full Name <span className="text-red-500">*</span></label>
+                            <input
+                              type="text"
+                              id="name"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleInputChange}
+                              className={`bg-[#FAF9F6] border ${errors.name ? 'border-red-400 focus:ring-red-200' : 'border-slate-150 focus:ring-secondary/20'} focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:ring-4 focus:outline-none`}
+                              placeholder="E.g. Priya Patel"
+                            />
+                            {errors.name && <span className="text-red-500 text-[10px] font-bold mt-1 pl-1">{errors.name}</span>}
+                          </div>
+                          {/* Phone */}
+                          <div className="flex flex-col text-left">
+                            <label htmlFor="phone" className="text-xs font-bold text-slate-655 font-sans mb-1.5">Phone Number <span className="text-red-500">*</span></label>
+                            <input
+                              type="tel"
+                              id="phone"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleInputChange}
+                              className={`bg-[#FAF9F6] border ${errors.phone ? 'border-red-400 focus:ring-red-200' : 'border-slate-150 focus:ring-secondary/20'} focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:ring-4 focus:outline-none`}
+                              placeholder="E.g. +91 99999 99999"
+                            />
+                            {errors.phone && <span className="text-red-500 text-[10px] font-bold mt-1 pl-1">{errors.phone}</span>}
+                          </div>
+                        </div>
+
+                        {/* Email */}
+                        <div className="flex flex-col text-left">
+                          <label htmlFor="email" className="text-xs font-bold text-slate-655 font-sans mb-1.5">Email Address <span className="text-red-500">*</span></label>
+                          <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            className={`bg-[#FAF9F6] border ${errors.email ? 'border-red-400 focus:ring-red-200' : 'border-slate-150 focus:ring-secondary/20'} focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:ring-4 focus:outline-none`}
+                            placeholder="E.g. priya@example.com"
+                          />
+                          {errors.email && <span className="text-red-500 text-[10px] font-bold mt-1 pl-1">{errors.email}</span>}
+                        </div>
+
+                        {/* Message */}
+                        <div className="flex flex-col text-left">
+                          <label htmlFor="message" className="text-xs font-bold text-slate-655 font-sans mb-1.5">Custom Notes (Optional)</label>
+                          <textarea
+                            id="message"
+                            name="message"
+                            value={formData.message}
+                            onChange={handleInputChange}
+                            rows="2"
+                            className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm focus:ring-4 focus:ring-secondary/20 transition-all resize-none focus:outline-none"
+                            placeholder="State any specific skin issues..."
+                          ></textarea>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                          <button
+                            type="button"
+                            onClick={handlePrev}
+                            className="w-full sm:w-1/4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl transition-transform active:scale-95 flex items-center justify-center gap-1"
+                          >
+                            <Icon name="arrow-left" className="w-4 h-4" /> Back
+                          </button>
+                          
+                          <button
+                            type="submit"
+                            className="w-full sm:w-3/4 bg-gradient-to-r from-accent via-accentDark to-accent text-primary font-sans font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl shadow-goldGlow hover:scale-102 active:scale-98 transition-all focus:ring-2 focus:ring-accent"
+                          >
+                            Request Consultation Slot
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                  </form>
+                </div>
+              </div>
+
+              {/* Clinic Metadata cards & Maps (Right Column) */}
+              <div className="lg:col-span-5 text-left flex flex-col gap-6 w-full">
+                
+                {/* Hours card */}
+                <MotionDiv delay={100} className="bg-primary text-white border border-white/5 rounded-3xl p-6 shadow-premium relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(223,186,132,0.12),transparent_40%)]"></div>
+                  
+                  <h3 className="font-serif text-lg font-bold border-b border-white/5 pb-3.5 mb-5 flex items-center gap-2 text-white">
+                    <Icon name="clock" className="w-5 h-5 text-accent" /> Bandra Clinic Hours
+                  </h3>
+
+                  <div className="space-y-4 text-xs sm:text-sm font-sans text-slate-300">
+                    <div className="flex gap-3 items-start">
+                      <div className="bg-white/5 p-2 rounded-xl text-accent shrink-0">
+                        <Icon name="map-pin" className="w-4 h-4 text-accent" />
+                      </div>
+                      <div>
+                        <h6 className="font-bold text-white">Location Address</h6>
+                        <p className="text-[11px] leading-relaxed text-slate-400 mt-1">
+                          Penthouse Suite, Platinum Crest, Turner Road, Bandra West, Mumbai 400050
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 items-start border-t border-white/5 pt-4">
+                      <div className="bg-white/5 p-2 rounded-xl text-accent shrink-0">
+                        <Icon name="phone" className="w-4 h-4 text-accent" />
+                      </div>
+                      <div>
+                        <h6 className="font-bold text-white">Clinical Coordinates</h6>
+                        <p className="text-[11px] text-slate-400 mt-1">+91 22 9988 7766 / +91 99999 99999</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 items-start border-t border-white/5 pt-4">
+                      <div className="bg-white/5 p-2 rounded-xl text-accent shrink-0">
+                        <Icon name="calendar" className="w-4 h-4 text-accent" />
+                      </div>
+                      <div className="w-full">
+                        <h6 className="font-bold text-white">Operational Framework</h6>
+                        <div className="grid grid-cols-2 text-[11px] text-slate-400 mt-2 gap-y-1">
+                          <span>Mon - Fri:</span> <span className="font-semibold text-white text-right">10:00 AM - 07:00 PM</span>
+                          <span>Saturday:</span> <span className="font-semibold text-white text-right">10:00 AM - 04:00 PM</span>
+                          <span>Sunday:</span> <span className="text-red-400 font-bold text-right">Closed (Clinical Emergency)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </MotionDiv>
+
+                {/* Map Grid */}
+                <MotionDiv delay={200} className="border border-slate-200/50 rounded-3xl p-1 bg-white shadow-sm overflow-hidden aspect-[4/3] relative">
+                  <iframe 
+                    title="DermaCare Luxe Bandra Map Location"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3771.218556608573!2d72.82583807572702!3d19.054171052654316!2m3!1f0!2f0!3f0!3m2!1i1020!2i768!4f13.1!3m3!1m2!1s0x3be7c91130722db7%3A0xe7bd13bf09a2be9!2sBandra%20West%2C%20Mumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1716634509122!5m2!1sen!2sin" 
+                    className="w-full h-full rounded-[20px] border-0" 
+                    allowFullScreen="" 
+                    loading="lazy" 
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
+                </MotionDiv>
+
+              </div>
+
+            </div>
+          </div>
+        </section>
+      );
+    };
+
+    /* ==========================================
+       Testimonials Component (Champagne-Pearl Gradient BG)
+       ========================================== */
+    const Testimonials = () => {
+      return (
+        <section id="testimonials" className="py-24 bg-gradient-to-tr from-[#FAF9F6] via-[#FAF6EE] to-[#FAF9F6] relative overflow-hidden border-t border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-6 mb-16 text-center md:text-left">
+              <div>
+                <span className="inline-block bg-secondary/10 border border-secondary/20 text-secondary font-sans font-bold text-xs tracking-widest uppercase rounded-full px-4 py-2 mb-3">
+                  Private Endorsements
+                </span>
+                <h2 className="font-serif text-3xl sm:text-4xl font-medium text-primary leading-tight">
+                  Endorsed by 10,000+ Patients
+                </h2>
+              </div>
+
+              {/* Google Badge */}
+              <MotionDiv delay={100} className="bg-white border border-slate-150/50 rounded-2xl px-5 py-4 flex items-center gap-3.5 shadow-sm shrink-0">
+                <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-primary font-sans font-black">
+                  G
+                </div>
+                <div>
+                  <div className="flex items-center gap-0.5">
+                    <span className="text-xs sm:text-sm font-black text-slate-850 mr-1.5">4.9 / 5.0</span>
+                    {[...Array(5)].map((_, i) => (
+                      <Icon key={i} name="star" className="w-3.5 h-3.5 fill-accent text-accent" />
+                    ))}
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">820+ clinical review entries</p>
+                </div>
+              </MotionDiv>
+            </div>
+
+            {/* Testimonials cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {TESTIMONIALS_DATA.map((rev, idx) => (
+                <MotionDiv
+                  key={idx}
+                  delay={idx * 50}
+                  className="glass-card rounded-3xl p-6 flex flex-col justify-between shadow-sm hover:shadow-premium hover:border-secondary/25 transition-all duration-300 text-left"
+                >
+                  <div>
+                    {/* Stars */}
+                    <div className="flex gap-0.5 mb-4">
+                      {[...Array(5)].map((_, i) => (
+                        <Icon key={i} name="star" className="w-3.5 h-3.5 fill-accent text-accent" />
+                      ))}
+                    </div>
+                    {/* Review text */}
+                    <p className="text-slate-655 font-sans text-xs sm:text-sm leading-relaxed mb-6 italic">
+                      "{rev.review}"
+                    </p>
+                  </div>
+
+                  {/* Patient profile footer */}
+                  <div className="flex items-center gap-3 border-t border-slate-100 pt-4.5">
+                    <div className={`w-9 h-9 rounded-full bg-gradient-to-tr ${rev.color} text-white font-sans font-bold text-xs flex items-center justify-center shadow-sm shrink-0 uppercase`}>
+                      {rev.initials}
+                    </div>
+                    <div>
+                      <h5 className="font-sans font-bold text-slate-850 text-xs sm:text-sm leading-tight">{rev.name}</h5>
+                      <span className="bg-secondary/10 text-secondary text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 inline-block">
+                        {rev.treatment}
+                      </span>
+                    </div>
+                  </div>
+                </MotionDiv>
+              ))}
+            </div>
+
+          </div>
+        </section>
+      );
+    };
+
+    /* ==========================================
+       Premium FAQ Accordion (Celadon Mist BG)
+       ========================================== */
+    const FAQ = () => {
+      const [openIdx, setOpenIdx] = useState(null);
+
+      return (
+        <section className="py-24 bg-gradient-to-br from-[#EBF5F3] via-[#FAF9F6] to-[#EBF5F3] relative overflow-hidden border-t border-slate-200/40">
+          <div className="absolute top-1/2 -right-48 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+          
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            {/* Header */}
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <span className="inline-block bg-secondary/10 border border-secondary/20 text-secondary font-sans font-bold text-xs tracking-widest uppercase rounded-full px-4 py-2 mb-3">
+                FAQ Desk
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-medium text-primary leading-tight">
+                Skincare Science Decoded
+              </h2>
+            </div>
+
+            {/* Accordion drawers */}
+            <div className="space-y-4">
+              {FAQ_DATA.map((faq, idx) => {
+                const isOpen = openIdx === idx;
+                return (
+                  <MotionDiv
+                    key={idx}
+                    delay={idx * 30}
+                    className="bg-white/90 backdrop-blur-md border border-slate-200/40 rounded-2xl overflow-hidden shadow-sm"
+                  >
+                    {/* Trigger */}
+                    <button
+                      onClick={() => setOpenIdx(isOpen ? null : idx)}
+                      className="w-full flex justify-between items-center px-6 py-4.5 text-left font-sans font-bold text-slate-800 hover:text-secondary transition-colors focus:ring-2 focus:ring-secondary focus:outline-none"
+                    >
+                      <span className="text-xs sm:text-sm pr-4 leading-snug">{faq.q}</span>
+                      <div className={`w-7.5 h-7.5 rounded-full bg-[#FAF9F6] border border-slate-200/60 flex items-center justify-center text-primary shrink-0 transition-transform duration-300 ${
+                        isOpen ? 'rotate-[135deg] bg-red-50 text-red-500 border-red-200' : ''
+                      }`}>
+                        <Icon name="plus" className="w-4 h-4 text-slate-500" />
+                      </div>
+                    </button>
+
+                    {/* Expand panel */}
+                    <div 
+                      className="faq-drawer overflow-hidden transition-all duration-300"
+                      style={{ maxHeight: isOpen ? '200px' : '0px' }}
+                    >
+                      <div className="px-6 pb-5 pt-1 text-slate-550 font-sans text-xs sm:text-sm leading-relaxed border-t border-slate-150/40">
+                        {faq.a}
+                      </div>
+                    </div>
+
+                  </MotionDiv>
+                );
+              })}
+            </div>
+
+          </div>
+        </section>
+      );
+    };
+
+    /* ==========================================
+       Premium 4-Column Footer
+       ========================================== */
+    const Footer = () => {
+      const [emailVal, setEmailVal] = useState('');
+      const [subSuccess, setSubSuccess] = useState(false);
+      const [subError, setSubError] = useState(false);
+
+      const handleSubscribe = (e) => {
+        e.preventDefault();
+        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal.trim())) {
+          setSubSuccess(true);
+          setSubError(false);
+          setEmailVal('');
+          setTimeout(() => setSubSuccess(false), 5000);
+        } else {
+          setSubError(true);
+        }
+      };
+
+      return (
+        <footer className="bg-primary text-slate-400 pt-20 relative overflow-hidden z-20 border-t border-white/5">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(223,186,132,0.06),transparent_35%)]"></div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            {/* 4 columns layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 pb-16 border-b border-white/5">
+              
+              {/* Brand and credentials (lg:col-span-4) */}
+              <div className="lg:col-span-4 flex flex-col items-start text-left">
+                <a href="#home" className="flex items-center gap-3 mb-5">
+                  <div className="bg-white/5 p-2 rounded-full border border-white/10">
+                    <Icon name="sparkles" className="w-5 h-5 text-accent" />
+                  </div>
+                  <div>
+                    <span className="font-serif text-lg sm:text-xl font-bold tracking-tight text-white">DermaCare <span className="text-accent">Luxe</span></span>
+                    <p className="text-[8px] tracking-[0.2em] text-slate-500 uppercase font-sans font-bold">Skin &amp; Laser Clinic</p>
+                  </div>
+                </a>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-6 max-w-sm">
+                  Dr. Priya Sharma (MD, FAAD USA) delivers customized scientific dermatological protocols inside our luxury private clinic in Turner Road, Bandra.
+                </p>
+                {/* Social circles */}
+                <div className="flex gap-2.5">
+                  {['instagram', 'facebook', 'youtube', 'message-circle'].map((sc) => (
+                    <a 
+                      key={sc}
+                      href="#" 
+                      className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:bg-accent hover:text-primary transition-all flex items-center justify-center focus:ring-2 focus:ring-accent"
+                    >
+                      <Icon name={sc} className="w-4.5 h-4.5" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Useful links (lg:col-span-2.5) */}
+              <div className="lg:col-span-2.5 text-left">
+                <h5 className="text-white font-sans font-bold text-xs uppercase tracking-widest mb-5">Quick Access</h5>
+                <ul className="space-y-3.5 text-xs sm:text-sm font-sans font-medium text-slate-400">
+                  <li><a href="#home" className="hover:text-accent transition-colors">Home Portal</a></li>
+                  <li><a href="#about" className="hover:text-accent transition-colors">MD Profile</a></li>
+                  <li><a href="#services" className="hover:text-accent transition-colors">Advanced Services</a></li>
+                  <li><a href="#gallery" className="hover:text-accent transition-colors">Real Case Studies</a></li>
+                  <li><a href="#testimonials" className="hover:text-accent transition-colors">Patient Endorsements</a></li>
+                </ul>
+              </div>
+
+              {/* Services (lg:col-span-2.5) */}
+              <div className="lg:col-span-2.5 text-left">
+                <h5 className="text-white font-sans font-bold text-xs uppercase tracking-widest mb-5">Clinic Protocols</h5>
+                <ul className="space-y-3.5 text-xs sm:text-sm font-sans font-medium text-slate-400">
+                  <li><a href="#services" className="hover:text-accent transition-colors">Acne Scar Remodeling</a></li>
+                  <li><a href="#services" className="hover:text-accent transition-colors">Scalp PRP Injections</a></li>
+                  <li><a href="#services" className="hover:text-accent transition-colors">Fractional CO2 Lasers</a></li>
+                  <li><a href="#services" className="hover:text-accent transition-colors">Aesthetic Botox FDA</a></li>
+                  <li><a href="#services" className="hover:text-accent transition-colors">Melasma Laser Shatter</a></li>
+                  <li><a href="#services" className="hover:text-accent transition-colors">Hydrafacial Infusions</a></li>
+                </ul>
+              </div>
+
+              {/* Skincare Bulletin (lg:col-span-3) */}
+              <div className="lg:col-span-3 text-left">
+                <h5 className="text-white font-sans font-bold text-xs uppercase tracking-widest mb-5">Clinical Bulletin</h5>
+                <p className="text-xs text-slate-400 mb-4.5 leading-relaxed">
+                  Join our private private newsletter list to receive diagnostic skincare updates and Priority Booking reminders.
+                </p>
+                <form onSubmit={handleSubscribe} className="space-y-2">
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={emailVal}
+                      onChange={(e) => {
+                        setEmailVal(e.target.value);
+                        if (subError) setSubError(false);
+                      }}
+                      className={`w-full bg-white/5 border ${subError ? 'border-red-400' : 'border-white/10'} focus:border-accent text-white text-xs px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent pr-12`}
+                      placeholder="Your email address"
+                    />
+                    <button
+                      type="submit"
+                      className="absolute right-1 top-1 bg-accent text-primary hover:bg-accentDark px-3.5 py-2 rounded-lg text-xs"
+                      aria-label="Subscribe to bulletin"
+                    >
+                      <Icon name="send" className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  {subError && <span className="text-red-400 text-[10px] font-bold mt-1 pl-1 block text-left">Invalid email format</span>}
+                  {subSuccess && <span className="text-secondary text-[10px] font-bold mt-1 pl-1 block text-left">Bulletins subscribed!</span>}
+                </form>
+              </div>
+
+            </div>
+
+            {/* Bottom Copyright */}
+            <div className="py-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-sans text-slate-500 font-medium">
+              <p>&copy; {new Date().getFullYear()} DermaCare Luxe. Dr. Priya Sharma MD, FAAD. All rights reserved.</p>
+              <div className="flex gap-4">
+                <a href="#" className="hover:text-accent transition-colors">Privacy Policy</a>
+                <span>|</span>
+                <a href="#" className="hover:text-accent transition-colors">Terms of Service</a>
+              </div>
+              <p className="flex items-center gap-1.5">
+                Made with <Icon name="heart" className="w-3 h-3 text-red-500 fill-red-500" /> in Mumbai
+              </p>
+            </div>
+
+          </div>
+        </footer>
+      );
+    };
+
+    /* ==========================================
+       Global Widgets (Floating Action & Scrolltop)
+       ========================================== */
+    const FloatActions = () => {
+      const [showScrollTop, setShowScrollTop] = useState(false);
+
+      useEffect(() => {
+        const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+
+      const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      return (
+        <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+          {/* Scroll to Top */}
+          <button
+            onClick={scrollToTop}
+            className={`w-11 h-11 rounded-full bg-white text-primary border border-slate-150 shadow-premium flex items-center justify-center transition-all duration-300 focus:ring-2 focus:ring-secondary ${
+              showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+            }`}
+            aria-label="Scroll to page top"
+          >
+            <Icon name="arrow-up" className="w-4.5 h-4.5 text-primary" />
+          </button>
+
+          {/* Touch-active WhatsApp Quick Chat */}
+          <a
+            href="https://wa.me/919999999999?text=Hi%20DermaCare%20Luxe,%20I%20would%20like%2520to%2520book%2520an%2520appointment%2520with%2520Dr.%2520Priya%2520Sharma."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-11 h-11 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white shadow-premium flex items-center justify-center transition-transform hover:scale-108 relative group focus:ring-2 focus:ring-[#25D366] no-select"
+            aria-label="Direct consultation chat on WhatsApp"
+          >
+            <span className="absolute -inset-1 rounded-full border-2 border-[#25D366] animate-ping opacity-60 pointer-events-none group-hover:hidden"></span>
+            <Icon name="message-circle" className="w-5.5 h-5.5 text-white" />
+          </a>
+        </div>
+      );
+    };
+
+    /* ==========================================
+       APP CONTAINER (CORE ROOT)
+       ========================================== */
+    const App = () => {
+      const [activeSection, setActiveSection] = useState('home');
+      const [selectedService, setSelectedService] = useState(null);
+      const [bookingPresetService, setBookingPresetService] = useState('');
+      const [toastMessage, setToastMessage] = useState(null);
+
+      // Scroll tracker for navigation anchors
+      useEffect(() => {
+        const sections = ['home', 'about', 'services', 'gallery', 'testimonials'];
+        const observers = sections.map((secId) => {
+          const el = document.getElementById(secId);
+          if (!el) return null;
+          
+          const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+              setActiveSection(secId);
+            }
+          }, { threshold: 0.15, rootMargin: '-15% 0px -65% 0px' });
+
+          observer.observe(el);
+          return { observer, el };
+        });
+
+        return () => {
+          observers.forEach((obsObj) => {
+            if (obsObj) obsObj.observer.unobserve(obsObj.el);
+          });
+        };
+      }, []);
+
+      const handleOpenServiceModal = (service) => {
+        setSelectedService(service);
+      };
+
+      const handleCloseServiceModal = () => {
+        setSelectedService(null);
+      };
+
+      const handleBookTreatmentFromModal = (treatmentName) => {
+        setBookingPresetService(treatmentName);
+        setSelectedService(null);
+        const contactSection = document.getElementById('contact');
+        if (contactSection) {
+          contactSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+
+      const handleBookAppointmentFromNav = () => {
+        const contactSection = document.getElementById('contact');
+        if (contactSection) {
+          contactSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+
+      const handleBookSpecialtyFromHero = (treatmentName, code) => {
+        const matchingService = SERVICES_DATA.find(s => s.id === code);
+        if (matchingService) {
+          setSelectedService(matchingService);
+        } else {
+          setBookingPresetService(treatmentName);
+          const contactSection = document.getElementById('contact');
+          if (contactSection) contactSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+
+      const handleFormSubmitSuccess = (patientName) => {
+        setToastMessage(`Thank you, ${patientName}! Your consultation request was received. We will contact you soon.`);
+        setBookingPresetService('');
+        setTimeout(() => setToastMessage(null), 5000);
+      };
+
+      return (
+        <div className="min-h-screen relative flex flex-col justify-between">
+          
+          {/* Navigation */}
+          <Navbar 
+            activeSection={activeSection} 
+            onBookAppointmentClick={handleBookAppointmentFromNav} 
+          />
+
+          {/* Floating Toast Alert */}
+          {toastMessage && (
+            <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] bg-slate-900 border border-emerald-500/20 text-white font-sans font-bold text-xs sm:text-sm px-6 py-4 rounded-2xl shadow-premium flex items-center gap-3 animate-[bounce_0.5s_ease-out]">
+              <div className="bg-emerald-500 p-1.5 rounded-full flex items-center justify-center shrink-0">
+                <Icon name="check" className="w-4 h-4 text-white" />
+              </div>
+              <span>{toastMessage}</span>
+              <button 
+                onClick={() => setToastMessage(null)}
+                className="text-slate-400 hover:text-white pl-2 focus:ring-2 focus:ring-secondary rounded"
+                aria-label="Dismiss toast"
+              >
+                <Icon name="x" className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Main sections */}
+          <main className="flex-grow">
+            
+            {/* Hero Portal with concern diagnostic */}
+            <Hero 
+              onBookClick={handleBookAppointmentFromNav} 
+              onViewTreatmentsClick={() => {
+                const srvSection = document.getElementById('services');
+                if (srvSection) srvSection.scrollIntoView({ behavior: 'smooth' });
+              }}
+              onBookSpecialty={handleBookSpecialtyFromHero}
+            />
+
+            {/* Counters */}
+            <Stats />
+
+            {/* Biography details */}
+            <About />
+
+            {/* advanced Clinical Services */}
+            <Services onLearnMoreClick={handleOpenServiceModal} />
+
+            {/* safety Frameworks (STUNNING Dark Midnight Blue BG) */}
+            <WhyUs />
+
+            {/* real Drag swipe comparative Gallery */}
+            <Gallery />
+
+            {/* Progressive scheduler terminal & Bandra maps */}
+            <Booking 
+              selectedService={bookingPresetService} 
+              onSubmitSuccess={handleFormSubmitSuccess} />
+
+            {/* Verified Patient testimonials */}
+            <Testimonials />
+
+            {/* accordion FAQ */}
+            <FAQ />
+
+          </main>
+
+          {/* Footer */}
+          <Footer />
+
+          {/* Float controllers */}
+          <FloatActions />
+
+          {/* Procedure Detail Modal overlay */}
+          {selectedService && (
+            <ServiceModal 
+              service={selectedService} 
+              onClose={handleCloseServiceModal} 
+              onBookTreatment={handleBookTreatmentFromModal} 
+            />
+          )}
+
+        </div>
+      );
+    };
+
+    // Render App
+    const rootElement = document.getElementById('root');
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+
+  </script>
+</body>
+</html>
