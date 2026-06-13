@@ -2058,6 +2058,8 @@
         } catch (err) {
           alert("Failed to delete booking: " + err.message);
         }
+      };
+
       const handleCompleteBooking = async (id) => {
         if (!supabaseClient) return;
         try {
