@@ -2203,13 +2203,17 @@
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 w-full">
+                {/* Total Bookings */}
                 <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm text-left relative overflow-hidden">
                   <div className="absolute right-4 top-4 bg-primary/5 w-10 h-10 rounded-full flex items-center justify-center border border-primary/10">
                     <Icon name="calendar" className="w-5 h-5 text-primary" />
                   </div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Total Bookings</span>
                   <h3 className="text-2xl font-black text-primary mt-2 font-sans">{bookings.length}</h3>
-                      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm text-left relative overflow-hidden">
+                </div>
+
+                {/* Upcoming Bookings */}
+                <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm text-left relative overflow-hidden">
                   <div className="absolute right-4 top-4 bg-[#14B8A6]/5 w-10 h-10 rounded-full flex items-center justify-center border border-[#14B8A6]/15">
                     <Icon name="clock" className="w-5 h-5 text-secondary" />
                   </div>
@@ -2219,6 +2223,7 @@
                   </h3>
                 </div>
 
+                {/* Completed Treatments */}
                 <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm text-left relative overflow-hidden">
                   <div className="absolute right-4 top-4 bg-accent/5 w-10 h-10 rounded-full flex items-center justify-center border border-accent/15">
                     <Icon name="activity" className="w-5 h-5 text-accent" />
@@ -2227,7 +2232,7 @@
                   <h3 className="text-2xl font-black text-primary mt-2 font-sans">
                     {bookings.filter(b => b.status === 'completed').length}
                   </h3>
-                </div>             </div>
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 w-full bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
