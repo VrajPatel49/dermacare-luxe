@@ -2058,6 +2058,22 @@
         } catch (err) {
           alert("Failed to delete booking: " + err.message);
         }
+      const handleCompleteBooking = async (id) => {
+        if (!supabaseClient) return;
+        try {
+          const { error } = await supabaseClient
+            .from('appointments')
+            .update({ status: 'completed' })
+            .eq('id', id);
+          if (error) throw error;
+          fetchBookings();
+        } catch (err) {
+          if (err.message && err.message.includes('column "status"')) {
+            alert("Database Error: The 'status' column is missing from your 'appointments' table. Please run the SQL migration script provided in the chat to update your database table.");
+          } else {
+            alert("Failed to complete booking: " + err.message);
+          }
+        }
       };
 
       const filteredBookings = bookings.filter((b) => {
@@ -2191,15 +2207,13 @@
                   </div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Total Bookings</span>
                   <h3 className="text-2xl font-black text-primary mt-2 font-sans">{bookings.length}</h3>
-                </div>
-
-                <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm text-left relative overflow-hidden">
+                      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm text-left relative overflow-hidden">
                   <div className="absolute right-4 top-4 bg-[#14B8A6]/5 w-10 h-10 rounded-full flex items-center justify-center border border-[#14B8A6]/15">
                     <Icon name="clock" className="w-5 h-5 text-secondary" />
                   </div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Upcoming Bookings</span>
                   <h3 className="text-2xl font-black text-primary mt-2 font-sans">
-                    {bookings.filter(b => new Date(b.date) >= new Date().setHours(0,0,0,0)).length}
+                    {bookings.filter(b => b.status !== 'completed').length}
                   </h3>
                 </div>
 
@@ -2209,9 +2223,9 @@
                   </div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Completed Treatments</span>
                   <h3 className="text-2xl font-black text-primary mt-2 font-sans">
-                    {bookings.filter(b => new Date(b.date) < new Date().setHours(0,0,0,0)).length}
+                    {bookings.filter(b => b.status === 'completed').length}
                   </h3>
-                </div>
+                </div>             </div>
               </div>
 
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 w-full bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
@@ -2294,8 +2308,8 @@
                               <td className="px-6 py-4">
                                 <div className="flex flex-col">
                                   <span className="font-bold text-slate-750">{bookingDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                                  <span className={`text-[9px] font-bold uppercase tracking-wider mt-1 inline-block text-left ${isUpcoming ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                    {isUpcoming ? 'Upcoming' : 'Completed'}
+                                  <span className={`text-[9px] font-bold uppercase tracking-wider mt-1 inline-block text-left ${b.status === 'completed' ? 'text-slate-400' : 'text-emerald-500'}`}>
+                                    {b.status === 'completed' ? 'Completed' : 'Upcoming'}
                                   </span>
                                 </div>
                               </td>
@@ -2306,7 +2320,16 @@
                                 </p>
                               </td>
 
-                              <td className="px-6 py-4 text-center">
+                              <td className="px-6 py-4 text-center flex items-center justify-center gap-1">
+                                {b.status !== 'completed' && (
+                                  <button
+                                    onClick={() => handleCompleteBooking(b.id)}
+                                    className="p-2 rounded-xl hover:bg-emerald-50 text-slate-400 hover:text-emerald-500 transition-colors focus:ring-2 focus:ring-emerald-200"
+                                    title="Mark as Completed"
+                                  >
+                                    <Icon name="check" className="w-4 h-4 text-emerald-500" />
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => handleDeleteBooking(b.id)}
                                   className="p-2.5 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors focus:ring-2 focus:ring-red-200"
