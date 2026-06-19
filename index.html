@@ -1504,15 +1504,15 @@
           setIsSubmitting(true);
           
           let dbSuccess = true;
-          let appointmentId = `DL-${Math.floor(100000 + Math.random() * 900000)}`;
+          const appointmentId = `DL-${Math.floor(100000 + Math.random() * 900000)}`;
           
-          const dbMessage = formData.time 
-            ? `[Preferred Time: ${formData.time}] ${formData.message.trim()}`.trim()
-            : formData.message.trim();
+          const timePart = formData.time ? `[Preferred Time: ${formData.time}]` : '';
+          const msgPart = formData.message.trim();
+          const dbMessage = `[Ref: ${appointmentId}] ${timePart} ${msgPart}`.replace(/\s+/g, ' ').trim();
 
           if (supabaseClient) {
             try {
-              const { data, error } = await supabaseClient
+              const { error } = await supabaseClient
                 .from('appointments')
                 .insert([
                   {
@@ -1524,14 +1524,11 @@
                     message: dbMessage,
                     created_at: new Date().toISOString()
                   }
-                ])
-                .select();
+                ]);
               
               if (error) {
                 console.error("Supabase insert error:", error);
                 dbSuccess = false;
-              } else if (data && data.length > 0) {
-                appointmentId = data[0].id;
               }
             } catch (err) {
               console.error("Supabase connection exception:", err);
