@@ -2380,42 +2380,43 @@
         }
       };
 
-      const sendAdminConfirmationWhatsApp = (booking) => {
-        const cleanPhone = booking.phone.replace(/[^\d+]/g, '');
-        let formattedPhone = cleanPhone;
-        if (!formattedPhone.startsWith('+') && formattedPhone.length === 10) {
-          formattedPhone = '91' + formattedPhone;
-        } else if (formattedPhone.startsWith('+')) {
-          formattedPhone = formattedPhone.replace('+', '');
-        }
-
-        let formattedDate = booking.date;
-        try {
-          formattedDate = new Date(booking.date).toLocaleDateString('en-IN', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          });
-        } catch (e) {
-          console.error(e);
-        }
-
-        const config = getWhatsAppConfig();
-        const clinicName = config?.clinicDetails?.name || 'Dr. Priya Sharma Clinic';
-        const doctorName = config?.clinicDetails?.doctorName || 'Dr. Priya Sharma';
-
-        const message = `Hello ${booking.name},\n\nYour appointment at ${clinicName} has been confirmed!\n\nAppointment Details:\n* Doctor: ${doctorName}\n* Date: ${formattedDate}\n* Protocol: ${booking.treatment}\n* Status: Confirmed\n\nWe look forward to welcoming you. Please reach out if you have any questions.`;
-
-        const isMobile = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-        const baseUrl = isMobile ? 'https://api.whatsapp.com/send' : 'https://web.whatsapp.com/send';
-        const whatsappUrl = `${baseUrl}?phone=${encodeURIComponent(formattedPhone)}&text=${encodeURIComponent(message)}`;
-
-        window.open(whatsappUrl, '_blank');
-      };
-
       const handleCompleteBooking = async (id) => {
         if (!supabaseClient) return;
+        
+        const booking = bookings.find((b) => b.id === id);
+        let waWindow = null;
+        
+        if (booking) {
+          const cleanPhone = booking.phone.replace(/[^\d+]/g, '');
+          let formattedPhone = cleanPhone;
+          if (!formattedPhone.startsWith('+') && formattedPhone.length === 10) {
+            formattedPhone = '91' + formattedPhone;
+          } else if (formattedPhone.startsWith('+')) {
+            formattedPhone = formattedPhone.replace('+', '');
+          }
+
+          let formattedDate = booking.date;
+          try {
+            formattedDate = new Date(booking.date).toLocaleDateString('en-IN', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            });
+          } catch (e) {
+            console.error(e);
+          }
+
+          const config = getWhatsAppConfig();
+          const clinicName = config?.clinicDetails?.name || 'Dr. Priya Sharma Clinic';
+          const doctorName = config?.clinicDetails?.doctorName || 'Dr. Priya Sharma';
+
+          const message = `Hello ${booking.name},\n\nYour appointment at ${clinicName} has been confirmed!\n\nAppointment Details:\n* Doctor: ${doctorName}\n* Date: ${formattedDate}\n* Protocol: ${booking.treatment}\n* Status: Confirmed\n\nWe look forward to welcoming you. Please reach out if you have any questions.`;
+
+          const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+          waWindow = window.open(whatsappUrl, '_blank');
+        }
+
         try {
           const { error } = await supabaseClient
             .from('appointments')
@@ -2423,13 +2424,10 @@
             .eq('id', id);
           if (error) throw error;
           
-          const booking = bookings.find((b) => b.id === id);
-          if (booking) {
-            sendAdminConfirmationWhatsApp(booking);
-          }
-          
           fetchBookings();
         } catch (err) {
+          if (waWindow) waWindow.close();
+          
           if (err.message && err.message.includes('column "status"')) {
             alert("Database Error: The 'status' column is missing from your 'appointments' table. Please run the SQL migration script provided in the chat to update your database table.");
           } else {
