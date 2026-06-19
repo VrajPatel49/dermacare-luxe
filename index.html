@@ -2411,15 +2411,15 @@
           const clinicName = config?.clinicDetails?.name || 'Dr. Priya Sharma Clinic';
           const doctorName = config?.clinicDetails?.doctorName || 'Dr. Priya Sharma';
 
-          const message = `Hello ${booking.name} 👋,\n\n` +
-            `✅ Your appointment at ${clinicName} has been confirmed!\n\n` +
-            `📋 Appointment Details:\n` +
-            `👩‍⚕️ Doctor: ${doctorName}\n` +
-            `📅 Date: ${formattedDate}\n` +
-            `✨ Procedure: ${booking.treatment}\n` +
-            `✅ Status: Confirmed\n\n` +
-            `😊 We look forward to welcoming you. If you have any questions or need assistance, please don't hesitate to contact us. 📞💬\n\n` +
-            `Thank you for choosing ${clinicName}! 🌟`;
+          const message = `Hello ${booking.name} \u{1F44B},\n\n` +
+            `\u{2705} Your appointment at ${clinicName} has been confirmed!\n\n` +
+            `\u{1F4CB} Appointment Details:\n` +
+            `\u{1F469}\u{200D}\u{2695}\u{FE0F} Doctor: ${doctorName}\n` +
+            `\u{1F4C5} Date: ${formattedDate}\n` +
+            `\u{2728} Procedure: ${booking.treatment}\n` +
+            `\u{2705} Status: Confirmed\n\n` +
+            `\u{1F60A} We look forward to welcoming you. If you have any questions or need assistance, please don't hesitate to contact us. \u{1F4DE}\u{1F4AC}\n\n` +
+            `Thank you for choosing ${clinicName}! \u{1F31F}`;
 
           const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
           waWindow = window.open(whatsappUrl, '_blank');
