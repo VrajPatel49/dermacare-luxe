@@ -2411,7 +2411,15 @@
           const clinicName = config?.clinicDetails?.name || 'Dr. Priya Sharma Clinic';
           const doctorName = config?.clinicDetails?.doctorName || 'Dr. Priya Sharma';
 
-          const message = `Hello ${booking.name},\n\nYour appointment at ${clinicName} has been confirmed!\n\nAppointment Details:\n* Doctor: ${doctorName}\n* Date: ${formattedDate}\n* Protocol: ${booking.treatment}\n* Status: Confirmed\n\nWe look forward to welcoming you. Please reach out if you have any questions.`;
+          const message = `Hello ${booking.name} 👋,\n\n` +
+            `✅ Your appointment at ${clinicName} has been confirmed!\n\n` +
+            `📋 Appointment Details:\n` +
+            `👩‍⚕️ Doctor: ${doctorName}\n` +
+            `📅 Date: ${formattedDate}\n` +
+            `✨ Procedure: ${booking.treatment}\n` +
+            `✅ Status: Confirmed\n\n` +
+            `😊 We look forward to welcoming you. If you have any questions or need assistance, please don't hesitate to contact us. 📞💬\n\n` +
+            `Thank you for choosing ${clinicName}! 🌟`;
 
           const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
           waWindow = window.open(whatsappUrl, '_blank');
