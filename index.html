@@ -166,6 +166,13 @@
     const SUPABASE_URL = 'https://yzlpfdeldsrqxdqfvixg.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_mRUyQgQmZKe72tYDBr5bCg_X-U6vMP2';
     const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+    const anonSupabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    }) : null;
 
     // Automated WhatsApp Notifications Sender
     const triggerWhatsAppConfirmation = async (appointmentDetails) => {
@@ -1511,9 +1518,9 @@
           const msgPart = formData.message.trim();
           const dbMessage = `[Ref: ${appointmentId}] ${timePart} ${msgPart}`.replace(/\s+/g, ' ').trim();
 
-          if (supabaseClient) {
+          if (anonSupabaseClient) {
             try {
-              const { error } = await supabaseClient
+              const { error } = await anonSupabaseClient
                 .from('appointments')
                 .insert([
                   {
