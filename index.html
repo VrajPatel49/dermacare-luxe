@@ -117,10 +117,241 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
 
+    // Default WhatsApp Integration Configuration
+    const DEFAULT_WHATSAPP_CONFIG = {
+      enabled: false,
+      provider: 'twilio',
+      twilio: {
+        accountSid: '',
+        authToken: '',
+        senderNumber: 'whatsapp:+14155238886'
+      },
+      meta: {
+        accessToken: '',
+        phoneNumberId: '',
+        templateName: 'appointment_confirmation',
+        languageCode: 'en_US'
+      },
+      custom: {
+        endpoint: ''
+      },
+      clinicDetails: {
+        name: 'Dr. Priya Sharma Clinic',
+        doctorName: 'Dr. Priya Sharma',
+        phone: '+91 9157931095'
+      }
+    };
+
+    const getWhatsAppConfig = () => {
+      try {
+        const saved = localStorage.getItem('whatsapp_config');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return {
+            ...DEFAULT_WHATSAPP_CONFIG,
+            ...parsed,
+            twilio: { ...DEFAULT_WHATSAPP_CONFIG.twilio, ...(parsed.twilio || {}) },
+            meta: { ...DEFAULT_WHATSAPP_CONFIG.meta, ...(parsed.meta || {}) },
+            custom: { ...DEFAULT_WHATSAPP_CONFIG.custom, ...(parsed.custom || {}) },
+            clinicDetails: { ...DEFAULT_WHATSAPP_CONFIG.clinicDetails, ...(parsed.clinicDetails || {}) }
+          };
+        }
+      } catch (e) {
+        console.error("Error reading WhatsApp config from localStorage:", e);
+      }
+      return DEFAULT_WHATSAPP_CONFIG;
+    };
+
     // Supabase Client Initialization
     const SUPABASE_URL = 'https://yzlpfdeldsrqxdqfvixg.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_mRUyQgQmZKe72tYDBr5bCg_X-U6vMP2';
     const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+    // Automated WhatsApp Notifications Sender
+    const triggerWhatsAppConfirmation = async (appointmentDetails) => {
+      const config = getWhatsAppConfig();
+      
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        patientName: appointmentDetails.name,
+        patientPhone: appointmentDetails.phone,
+        appointmentId: appointmentDetails.id,
+        status: 'pending',
+        provider: config.provider,
+        message: '',
+        error: null
+      };
+
+      const saveLog = (status, errorMsg = null) => {
+        logEntry.status = status;
+        logEntry.error = errorMsg;
+        try {
+          const logs = JSON.parse(localStorage.getItem('whatsapp_logs') || '[]');
+          localStorage.setItem('whatsapp_logs', JSON.stringify([logEntry, ...logs].slice(0, 100)));
+        } catch (e) {
+          console.error("Failed to save WhatsApp log to localStorage:", e);
+        }
+      };
+
+      if (!config.enabled) {
+        console.log("WhatsApp notifications are currently disabled. Skipped sending message:", appointmentDetails);
+        saveLog('skipped_disabled');
+        return;
+      }
+
+      // Format appointment date for presentation
+      let formattedDate = appointmentDetails.date || 'N/A';
+      try {
+        if (appointmentDetails.date) {
+          formattedDate = new Date(appointmentDetails.date).toLocaleDateString('en-IN', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+        }
+      } catch (dateErr) {
+        console.error("Error formatting date:", dateErr);
+      }
+
+      const messageBody = `Hello ${appointmentDetails.name},\n\nYour appointment has been successfully booked.\n\nAppointment Details:\n* Appointment ID: ${appointmentDetails.id}\n* Doctor: ${config.clinicDetails.doctorName}\n* Date: ${formattedDate}\n* Time: ${appointmentDetails.time}\n\nThank you for choosing ${config.clinicDetails.name}.`;
+      logEntry.message = messageBody;
+
+      const cleanPhone = appointmentDetails.phone.replace(/[^\d+]/g, '');
+
+      try {
+        if (config.provider === 'twilio') {
+          const sid = config.twilio.accountSid;
+          const token = config.twilio.authToken;
+          const from = config.twilio.senderNumber;
+
+          if (!sid || !token || !from) {
+            throw new Error("Twilio integration settings are incomplete (SID, Auth Token, or Sender Number missing).");
+          }
+
+          let to = cleanPhone;
+          if (!to.startsWith('+') && !to.startsWith('whatsapp:')) {
+            to = '+91' + to;
+          }
+          if (!to.startsWith('whatsapp:')) {
+            to = 'whatsapp:' + to;
+          }
+
+          const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Basic ' + btoa(`${sid}:${token}`),
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+              To: to,
+              From: from,
+              Body: messageBody
+            })
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Twilio Gateway response error ${response.status}: ${errText}`);
+          }
+
+          console.log("WhatsApp confirmation sent successfully via Twilio.");
+          saveLog('success');
+        } 
+        else if (config.provider === 'meta') {
+          const token = config.meta.accessToken;
+          const phoneId = config.meta.phoneNumberId;
+          const templateName = config.meta.templateName;
+          const lang = config.meta.languageCode || 'en_US';
+
+          if (!token || !phoneId || !templateName) {
+            throw new Error("Meta Cloud API integration settings are incomplete (Token, Phone ID, or Template Name missing).");
+          }
+
+          let to = cleanPhone.replace('+', '').replace('whatsapp:', '');
+          if (to.length === 10 && !to.startsWith('91')) {
+            to = '91' + to;
+          }
+
+          const url = `https://graph.facebook.com/v17.0/${phoneId}/messages`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to: to,
+              type: "template",
+              template: {
+                name: templateName,
+                language: { code: lang },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      { type: "text", text: appointmentDetails.name },
+                      { type: "text", text: String(appointmentDetails.id) },
+                      { type: "text", text: config.clinicDetails.doctorName },
+                      { type: "text", text: formattedDate },
+                      { type: "text", text: appointmentDetails.time }
+                    ]
+                  }
+                ]
+              }
+            })
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Meta Cloud API response error ${response.status}: ${errText}`);
+          }
+
+          console.log("WhatsApp confirmation sent successfully via Meta Cloud API.");
+          saveLog('success');
+        } 
+        else if (config.provider === 'custom') {
+          const endpoint = config.custom.endpoint;
+          if (!endpoint) {
+            throw new Error("Custom Webhook Endpoint URL is missing.");
+          }
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              patientName: appointmentDetails.name,
+              patientPhone: cleanPhone,
+              appointmentId: appointmentDetails.id,
+              doctorName: config.clinicDetails.doctorName,
+              date: formattedDate,
+              time: appointmentDetails.time,
+              clinicName: config.clinicDetails.name,
+              notes: appointmentDetails.notes,
+              messageText: messageBody
+            })
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Custom Webhook response error ${response.status}: ${errText}`);
+          }
+
+          console.log("WhatsApp confirmation sent successfully via Custom Webhook.");
+          saveLog('success');
+        } 
+        else {
+          throw new Error(`Invalid WhatsApp provider selected: ${config.provider}`);
+        }
+      } catch (err) {
+        console.error("Error executing automated WhatsApp sending:", err);
+        saveLog('failed', err.message || String(err));
+      }
+    };
 
     // ==========================================
     // 1. DATA STORE
@@ -1203,6 +1434,7 @@
         phone: '',
         email: '',
         date: '',
+        time: '',
         treatment: '',
         message: ''
       });
@@ -1234,6 +1466,7 @@
       const validateStep2 = () => {
         const err = {};
         if (!formData.date) err.date = 'Preferred date is required';
+        if (!formData.time) err.time = 'Preferred time slot is required';
         setErrors(err);
         return Object.keys(err).length === 0;
       };
@@ -1271,9 +1504,15 @@
           setIsSubmitting(true);
           
           let dbSuccess = true;
+          let appointmentId = `DL-${Math.floor(100000 + Math.random() * 900000)}`;
+          
+          const dbMessage = formData.time 
+            ? `[Preferred Time: ${formData.time}] ${formData.message.trim()}`.trim()
+            : formData.message.trim();
+
           if (supabaseClient) {
             try {
-              const { error } = await supabaseClient
+              const { data, error } = await supabaseClient
                 .from('appointments')
                 .insert([
                   {
@@ -1282,13 +1521,17 @@
                     email: formData.email.trim(),
                     date: formData.date,
                     treatment: formData.treatment,
-                    message: formData.message.trim(),
+                    message: dbMessage,
                     created_at: new Date().toISOString()
                   }
-                ]);
+                ])
+                .select();
+              
               if (error) {
                 console.error("Supabase insert error:", error);
                 dbSuccess = false;
+              } else if (data && data.length > 0) {
+                appointmentId = data[0].id;
               }
             } catch (err) {
               console.error("Supabase connection exception:", err);
@@ -1299,8 +1542,18 @@
           setIsSubmitting(false);
 
           if (dbSuccess) {
+            triggerWhatsAppConfirmation({
+              id: appointmentId,
+              name: formData.name.trim(),
+              phone: formData.phone.trim(),
+              email: formData.email.trim(),
+              date: formData.date,
+              time: formData.time,
+              notes: formData.message.trim()
+            });
+
             onSubmitSuccess(formData.name, true);
-            setFormData({ name: '', phone: '', email: '', date: '', treatment: '', message: '' });
+            setFormData({ name: '', phone: '', email: '', date: '', time: '', treatment: '', message: '' });
             setCurrentStep(1);
           } else {
             onSubmitSuccess(formData.name, false);
@@ -1383,18 +1636,42 @@
                     {/* Step 2: Preferred Date */}
                     {currentStep === 2 && (
                       <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
-                        <h4 className="font-serif text-base font-bold text-primary mb-1">Select Consultation Date</h4>
-                        <div className="flex flex-col text-left">
-                          <label htmlFor="date" className="text-xs font-bold text-slate-655 font-sans mb-2">Preferred Appointment Date <span className="text-red-500">*</span></label>
-                          <input
-                            type="date"
-                            id="date"
-                            name="date"
-                            value={formData.date}
-                            onChange={handleInputChange}
-                            className={`bg-[#FAF9F6] border ${errors.date ? 'border-red-400 focus:ring-red-200' : 'border-slate-150 focus:ring-secondary/20'} focus:border-secondary focus:bg-white rounded-xl px-4 py-3.5 text-xs sm:text-sm text-slate-600 transition-all focus:ring-4 focus:outline-none`}
-                          />
-                          {errors.date && <span className="text-red-500 text-[10px] font-bold mt-1.5 pl-1">{errors.date}</span>}
+                        <h4 className="font-serif text-base font-bold text-primary mb-1">Select Consultation Schedule</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="flex flex-col text-left">
+                            <label htmlFor="date" className="text-xs font-bold text-slate-655 font-sans mb-2">Preferred Appointment Date <span className="text-red-500">*</span></label>
+                            <input
+                              type="date"
+                              id="date"
+                              name="date"
+                              value={formData.date}
+                              onChange={handleInputChange}
+                              className={`bg-[#FAF9F6] border ${errors.date ? 'border-red-400 focus:ring-red-200' : 'border-slate-150 focus:ring-secondary/20'} focus:border-secondary focus:bg-white rounded-xl px-4 py-3.5 text-xs sm:text-sm text-slate-600 transition-all focus:ring-4 focus:outline-none`}
+                            />
+                            {errors.date && <span className="text-red-500 text-[10px] font-bold mt-1.5 pl-1">{errors.date}</span>}
+                          </div>
+                          
+                          <div className="flex flex-col text-left">
+                            <label htmlFor="time" className="text-xs font-bold text-slate-655 font-sans mb-2">Preferred Time Slot <span className="text-red-500">*</span></label>
+                            <select
+                              id="time"
+                              name="time"
+                              value={formData.time}
+                              onChange={handleInputChange}
+                              className={`bg-[#FAF9F6] border ${errors.time ? 'border-red-400 focus:ring-red-200' : 'border-slate-150 focus:ring-secondary/20'} focus:border-secondary focus:bg-white rounded-xl px-4 py-3.5 text-xs sm:text-sm text-slate-600 transition-all focus:ring-4 focus:outline-none`}
+                            >
+                              <option value="">-- Choose time slot --</option>
+                              <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
+                              <option value="11:00 AM - 12:00 PM">11:00 AM - 12:00 PM</option>
+                              <option value="12:00 PM - 01:00 PM">12:00 PM - 01:00 PM</option>
+                              <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
+                              <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
+                              <option value="04:00 PM - 05:00 PM">04:00 PM - 05:00 PM</option>
+                              <option value="05:00 PM - 06:00 PM">05:00 PM - 06:00 PM</option>
+                              <option value="06:00 PM - 07:00 PM">06:00 PM - 07:00 PM</option>
+                            </select>
+                            {errors.time && <span className="text-red-500 text-[10px] font-bold mt-1.5 pl-1">{errors.time}</span>}
+                          </div>
                         </div>
                         <div className="flex justify-between pt-4">
                           <button
@@ -1854,10 +2131,23 @@
        ========================================== */
     const FloatActions = () => {
       const [showScrollTop, setShowScrollTop] = useState(false);
+      const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/919157931095");
 
       useEffect(() => {
         const handleScroll = () => setShowScrollTop(window.scrollY > 400);
         window.addEventListener('scroll', handleScroll);
+        
+        const config = getWhatsAppConfig();
+        const businessPhone = config.clinicDetails.phone.replace(/[^\d]/g, '');
+        const text = encodeURIComponent("Hello, I would like to book an appointment / inquire about your clinical skincare services.");
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          setWhatsappUrl(`https://api.whatsapp.com/send?phone=${businessPhone}&text=${text}`);
+        } else {
+          setWhatsappUrl(`https://web.whatsapp.com/send?phone=${businessPhone}&text=${text}`);
+        }
+
         return () => window.removeEventListener('scroll', handleScroll);
       }, []);
 
@@ -1880,7 +2170,7 @@
 
           {/* Touch-active WhatsApp Quick Chat */}
           <a
-            href="https://wa.me/919999999999?text=Hi%20DermaCare%20Luxe,%20I%20would%20like%2520to%2520book%2520an%2520appointment%2520with%2520Dr.%2520Priya%2520Sharma."
+            href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="w-11 h-11 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white shadow-premium flex items-center justify-center transition-transform hover:scale-108 relative group focus:ring-2 focus:ring-[#25D366] no-select"
@@ -1907,6 +2197,93 @@
       const [bookings, setBookings] = useState([]);
       const [searchQuery, setSearchQuery] = useState('');
       const [isLoadingBookings, setIsLoadingBookings] = useState(false);
+      
+      // WhatsApp Admin Panel States
+      const [activeTab, setActiveTab] = useState('bookings');
+      const [whatsappLogs, setWhatsappLogs] = useState([]);
+      const [waConfig, setWaConfig] = useState(getWhatsAppConfig());
+      const [isSavingConfig, setIsSavingConfig] = useState(false);
+      const [configSuccessMsg, setConfigSuccessMsg] = useState('');
+      const [configErrorMsg, setConfigErrorMsg] = useState('');
+      
+      const [testPhone, setTestPhone] = useState('');
+      const [isSendingTest, setIsSendingTest] = useState(false);
+      const [testResult, setTestResult] = useState(null);
+
+      const fetchWhatsappLogs = () => {
+        try {
+          const logs = JSON.parse(localStorage.getItem('whatsapp_logs') || '[]');
+          setWhatsappLogs(logs);
+        } catch (e) {
+          console.error("Error reading WhatsApp logs from localStorage:", e);
+        }
+      };
+
+      // Load logs whenever tab changes
+      useEffect(() => {
+        if (activeTab === 'whatsapp_logs') {
+          fetchWhatsappLogs();
+        }
+      }, [activeTab]);
+
+      const handleSaveWaConfig = (e) => {
+        e.preventDefault();
+        setIsSavingConfig(true);
+        setConfigSuccessMsg('');
+        setConfigErrorMsg('');
+        try {
+          localStorage.setItem('whatsapp_config', JSON.stringify(waConfig));
+          setConfigSuccessMsg('WhatsApp Gateway Configuration saved successfully!');
+          setTimeout(() => setConfigSuccessMsg(''), 4000);
+        } catch (err) {
+          setConfigErrorMsg('Failed to save configuration: ' + err.message);
+        } finally {
+          setIsSavingConfig(false);
+        }
+      };
+
+      const handleSendTestMessage = async (e) => {
+        e.preventDefault();
+        if (!testPhone.trim()) {
+          alert("Please enter a valid recipient phone number.");
+          return;
+        }
+        setIsSendingTest(true);
+        setTestResult(null);
+        try {
+          // Pre-save current config values
+          localStorage.setItem('whatsapp_config', JSON.stringify(waConfig));
+
+          const testAppointment = {
+            id: `TEST-${Math.floor(100000 + Math.random() * 900000)}`,
+            name: 'Test Patient',
+            phone: testPhone.trim(),
+            email: 'test@example.com',
+            date: new Date().toISOString().split('T')[0],
+            time: '12:00 PM - 01:00 PM',
+            notes: 'This is a test notification message from the WhatsApp admin panel.'
+          };
+
+          await triggerWhatsAppConfirmation(testAppointment);
+          fetchWhatsappLogs();
+
+          const logs = JSON.parse(localStorage.getItem('whatsapp_logs') || '[]');
+          const latest = logs[0];
+
+          if (latest && latest.status === 'success') {
+            setTestResult({ success: true, message: "Test message sent successfully! Please check your phone." });
+          } else {
+            setTestResult({ 
+              success: false, 
+              message: `Failed to send test. Gateway Error: ${latest ? (latest.error || 'Unknown error') : 'No log found'}` 
+            });
+          }
+        } catch (err) {
+          setTestResult({ success: false, message: `System Error: ${err.message}` });
+        } finally {
+          setIsSendingTest(false);
+        }
+      };
 
       const checkAdminRegistrationStatus = useCallback(async () => {
         if (!supabaseClient) {
@@ -2235,124 +2612,518 @@
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 w-full bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
-                <div className="relative w-full sm:w-96">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name, treatment, email..."
-                    className="w-full bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
-                  />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">
-                    <Icon name="search" className="w-4 h-4" />
-                  </div>
-                </div>
+              {/* Tab Navigation */}
+              <div className="flex flex-wrap gap-2 border-b border-slate-200 w-full mb-8 text-left">
                 <button
-                  onClick={fetchBookings}
-                  disabled={isLoadingBookings}
-                  className="w-full sm:w-auto glass-card hover:bg-slate-50 text-primary font-sans font-bold text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-all border border-slate-200 flex items-center justify-center gap-1.5"
+                  type="button"
+                  onClick={() => setActiveTab('bookings')}
+                  className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-1.5 focus:outline-none ${
+                    activeTab === 'bookings'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-slate-400 hover:text-slate-650'
+                  }`}
                 >
-                  {isLoadingBookings ? (
-                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <>
-                      <Icon name="refresh-cw" className="w-4 h-4" /> Sync Registry
-                    </>
-                  )}
+                  <Icon name="calendar" className="w-4 h-4" /> Appointments Registry
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('whatsapp_logs')}
+                  className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-1.5 focus:outline-none ${
+                    activeTab === 'whatsapp_logs'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-slate-400 hover:text-slate-650'
+                  }`}
+                >
+                  <Icon name="message-square" className="w-4 h-4" /> WhatsApp Logs
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('whatsapp_settings')}
+                  className={`py-3.5 px-5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-1.5 focus:outline-none ${
+                    activeTab === 'whatsapp_settings'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-slate-400 hover:text-slate-650'
+                  }`}
+                >
+                  <Icon name="sliders" className="w-4 h-4" /> Gateway Settings
                 </button>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-3xl shadow-premium overflow-hidden w-full text-left">
-                {isLoadingBookings && bookings.length === 0 ? (
-                  <div className="p-12 text-center text-slate-400">
-                    <div className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                    <span className="text-xs font-bold uppercase tracking-wider font-sans">Connecting to database...</span>
-                  </div>
-                ) : filteredBookings.length === 0 ? (
-                  <div className="p-16 text-center text-slate-400">
-                    <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                      <Icon name="folder-open" className="w-7 h-7 text-slate-400" />
+              {/* Tab 1: Bookings Registry */}
+              {activeTab === 'bookings' && (
+                <>
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 w-full bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
+                    <div className="relative w-full sm:w-96">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search by name, treatment, email..."
+                        className="w-full bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                      />
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+                        <Icon name="search" className="w-4 h-4" />
+                      </div>
                     </div>
-                    <h4 className="font-serif text-lg font-bold text-primary mb-1">No Booking Files Located</h4>
-                    <p className="text-xs text-slate-400 font-sans">
-                      {searchQuery ? "No records match your active search filter." : "There are currently no scheduling records stored in the system."}
-                    </p>
+                    <button
+                      onClick={fetchBookings}
+                      disabled={isLoadingBookings}
+                      className="w-full sm:w-auto glass-card hover:bg-slate-50 text-primary font-sans font-bold text-xs uppercase tracking-widest px-5 py-3 rounded-xl transition-all border border-slate-200 flex items-center justify-center gap-1.5"
+                    >
+                      {isLoadingBookings ? (
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <>
+                          <Icon name="refresh-cw" className="w-4 h-4" /> Sync Registry
+                        </>
+                      )}
+                    </button>
                   </div>
-                ) : (
-                  <div className="overflow-x-auto w-full">
-                    <table className="w-full min-w-[800px] border-collapse font-sans text-xs sm:text-sm">
-                      <thead>
-                        <tr className="bg-[#FAF9F6] border-b border-slate-200/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          <th className="px-6 py-4.5">Patient Details</th>
-                          <th className="px-6 py-4.5">Requested Protocol</th>
-                          <th className="px-6 py-4.5">Target Date</th>
-                          <th className="px-6 py-4.5">Patient Notes</th>
-                          <th className="px-6 py-4.5 text-center">Desk Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {filteredBookings.map((b) => {
-                          const bookingDate = new Date(b.date);
-                          const isUpcoming = bookingDate >= new Date().setHours(0,0,0,0);
-                          
-                          return (
-                            <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-6 py-4 text-left">
-                                <h5 className="font-bold text-slate-800 text-sm">{b.name}</h5>
-                                <div className="text-[10px] text-slate-400 mt-1 font-semibold space-y-0.5">
-                                  <p className="flex items-center gap-1"><Icon name="mail" className="w-3.5 h-3.5 text-slate-400" /> {b.email}</p>
-                                  <p className="flex items-center gap-1"><Icon name="phone" className="w-3.5 h-3.5 text-slate-400" /> {b.phone}</p>
-                                </div>
-                              </td>
 
-                              <td className="px-6 py-4 vertical-middle">
-                                <span className="bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-secondary/10">
-                                  {b.treatment}
-                                </span>
-                              </td>
-
-                              <td className="px-6 py-4">
-                                <div className="flex flex-col">
-                                  <span className="font-bold text-slate-750">{bookingDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                                  <span className={`text-[9px] font-bold uppercase tracking-wider mt-1 inline-block text-left ${b.status === 'completed' ? 'text-slate-400' : 'text-emerald-500'}`}>
-                                    {b.status === 'completed' ? 'Completed' : 'Upcoming'}
-                                  </span>
-                                </div>
-                              </td>
-
-                              <td className="px-6 py-4 max-w-xs">
-                                <p className="text-slate-500 text-xs leading-relaxed truncate-3-lines text-wrap break-all" title={b.message}>
-                                  {b.message || <em className="text-slate-400">No notes provided</em>}
-                                </p>
-                              </td>
-
-                              <td className="px-6 py-4 text-center flex items-center justify-center gap-1">
-                                {b.status !== 'completed' && (
-                                  <button
-                                    onClick={() => handleCompleteBooking(b.id)}
-                                    className="p-2 rounded-xl hover:bg-emerald-50 text-slate-400 hover:text-emerald-500 transition-colors focus:ring-2 focus:ring-emerald-200"
-                                    title="Mark as Completed"
-                                  >
-                                    <Icon name="check" className="w-4 h-4 text-emerald-500" />
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => handleDeleteBooking(b.id)}
-                                  className="p-2.5 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors focus:ring-2 focus:ring-red-200"
-                                  title="Remove Booking"
-                                >
-                                  <Icon name="trash-2" className="w-4 h-4" />
-                                </button>
-                              </td>
+                  <div className="bg-white border border-slate-100 rounded-3xl shadow-premium overflow-hidden w-full text-left">
+                    {isLoadingBookings && bookings.length === 0 ? (
+                      <div className="p-12 text-center text-slate-400">
+                        <div className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                        <span className="text-xs font-bold uppercase tracking-wider font-sans">Connecting to database...</span>
+                      </div>
+                    ) : filteredBookings.length === 0 ? (
+                      <div className="p-16 text-center text-slate-400">
+                        <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                          <Icon name="folder-open" className="w-7 h-7 text-slate-400" />
+                        </div>
+                        <h4 className="font-serif text-lg font-bold text-primary mb-1">No Booking Files Located</h4>
+                        <p className="text-xs text-slate-400 font-sans">
+                          {searchQuery ? "No records match your active search filter." : "There are currently no scheduling records stored in the system."}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full min-w-[800px] border-collapse font-sans text-xs sm:text-sm">
+                          <thead>
+                            <tr className="bg-[#FAF9F6] border-b border-slate-200/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                              <th className="px-6 py-4.5">Patient Details</th>
+                              <th className="px-6 py-4.5">Requested Protocol</th>
+                              <th className="px-6 py-4.5">Target Date</th>
+                              <th className="px-6 py-4.5">Patient Notes</th>
+                              <th className="px-6 py-4.5 text-center">Desk Actions</th>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {filteredBookings.map((b) => {
+                              const bookingDate = new Date(b.date);
+                              
+                              return (
+                                <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="px-6 py-4 text-left">
+                                    <h5 className="font-bold text-slate-800 text-sm">{b.name}</h5>
+                                    <div className="text-[10px] text-slate-400 mt-1 font-semibold space-y-0.5">
+                                      <p className="flex items-center gap-1"><Icon name="mail" className="w-3.5 h-3.5 text-slate-400" /> {b.email}</p>
+                                      <p className="flex items-center gap-1"><Icon name="phone" className="w-3.5 h-3.5 text-slate-400" /> {b.phone}</p>
+                                    </div>
+                                  </td>
+
+                                  <td className="px-6 py-4 vertical-middle">
+                                    <span className="bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-secondary/10">
+                                      {b.treatment}
+                                    </span>
+                                  </td>
+
+                                  <td className="px-6 py-4">
+                                    <div className="flex flex-col">
+                                      <span className="font-bold text-slate-750">{bookingDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                      <span className={`text-[9px] font-bold uppercase tracking-wider mt-1 inline-block text-left ${b.status === 'completed' ? 'text-slate-400' : 'text-emerald-500'}`}>
+                                        {b.status === 'completed' ? 'Completed' : 'Upcoming'}
+                                      </span>
+                                    </div>
+                                  </td>
+
+                                  <td className="px-6 py-4 max-w-xs">
+                                    <p className="text-slate-500 text-xs leading-relaxed truncate-3-lines text-wrap break-all" title={b.message}>
+                                      {b.message || <em className="text-slate-400">No notes provided</em>}
+                                    </p>
+                                  </td>
+
+                                  <td className="px-6 py-4 text-center flex items-center justify-center gap-1">
+                                    {b.status !== 'completed' && (
+                                      <button
+                                        onClick={() => handleCompleteBooking(b.id)}
+                                        className="p-2 rounded-xl hover:bg-emerald-50 text-slate-400 hover:text-emerald-500 transition-colors focus:ring-2 focus:ring-emerald-200"
+                                        title="Mark as Completed"
+                                      >
+                                        <Icon name="check" className="w-4 h-4 text-emerald-500" />
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => handleDeleteBooking(b.id)}
+                                      className="p-2.5 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors focus:ring-2 focus:ring-red-200"
+                                      title="Remove Booking"
+                                    >
+                                      <Icon name="trash-2" className="w-4 h-4" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
+
+              {/* Tab 2: WhatsApp Delivery Logs */}
+              {activeTab === 'whatsapp_logs' && (
+                <div className="bg-white border border-slate-100 rounded-3xl shadow-premium overflow-hidden w-full text-left animate-[fadeIn_0.3s_ease-out] p-6 sm:p-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h4 className="font-serif text-lg font-bold text-primary">WhatsApp Delivery Registry</h4>
+                      <p className="text-xs text-slate-400 font-sans mt-0.5">Delivery statuses of automated booking notifications logged in local storage.</p>
+                    </div>
+                    <button
+                      onClick={fetchWhatsappLogs}
+                      className="glass-card hover:bg-slate-50 text-primary font-sans font-bold text-xs uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all border border-slate-200 flex items-center justify-center gap-1.5"
+                    >
+                      <Icon name="refresh-cw" className="w-3.5 h-3.5" /> Reload Logs
+                    </button>
+                  </div>
+
+                  {whatsappLogs.length === 0 ? (
+                    <div className="p-16 text-center text-slate-400">
+                      <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                        <Icon name="message-square" className="w-7 h-7 text-slate-400" />
+                      </div>
+                      <h5 className="font-serif text-base font-bold text-primary mb-1">No Delivery Logs Found</h5>
+                      <p className="text-xs text-slate-400 font-sans">
+                        No automated messages have been sent or logged on this device yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto w-full">
+                      <table className="w-full min-w-[700px] border-collapse font-sans text-xs sm:text-sm">
+                        <thead>
+                          <tr className="bg-[#FAF9F6] border-b border-slate-200/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <th className="px-6 py-4 text-left">Timestamp</th>
+                            <th className="px-6 py-4 text-left">Recipient</th>
+                            <th className="px-6 py-4 text-left">Status</th>
+                            <th className="px-6 py-4 text-left">Provider</th>
+                            <th className="px-6 py-4 text-left">Message Details</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {whatsappLogs.map((log, index) => {
+                            const dateStr = new Date(log.timestamp).toLocaleString('en-IN', {
+                              day: 'numeric', month: 'short', year: 'numeric',
+                              hour: '2-digit', minute: '2-digit'
+                            });
+                            
+                            let statusColor = 'bg-slate-100 text-slate-500 border-slate-200';
+                            if (log.status === 'success') statusColor = 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                            if (log.status === 'failed') statusColor = 'bg-red-50 text-red-600 border-red-100';
+                            if (log.status === 'skipped_disabled') statusColor = 'bg-amber-50 text-amber-600 border-amber-100';
+
+                            return (
+                              <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="px-6 py-4 font-mono text-[11px] text-slate-500">{dateStr}</td>
+                                <td className="px-6 py-4 text-left">
+                                  <h6 className="font-bold text-slate-800">{log.patientName}</h6>
+                                  <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">{log.patientPhone}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className={`inline-block text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${statusColor}`}>
+                                    {log.status.replace('_', ' ')}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                    {log.provider}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 max-w-sm">
+                                  {log.status === 'failed' && (
+                                    <div className="bg-red-50/50 border border-red-100 text-red-600 p-2.5 rounded-xl text-[11px] mb-2 flex items-start gap-1">
+                                      <Icon name="alert-triangle" className="w-3.5 h-3.5 shrink-0 text-red-500 mt-0.5" />
+                                      <span className="font-medium text-wrap break-words">{log.error}</span>
+                                    </div>
+                                  )}
+                                  <p className="text-slate-500 text-[11px] leading-relaxed whitespace-pre-line border border-slate-100 p-2.5 bg-slate-50/50 rounded-xl" title={log.message}>
+                                    {log.message || <em className="text-slate-400">No message prefill logged</em>}
+                                  </p>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tab 3: WhatsApp Gateway Settings */}
+              {activeTab === 'whatsapp_settings' && (
+                <div className="bg-white border border-slate-100 rounded-3xl shadow-premium w-full text-left animate-[fadeIn_0.3s_ease-out] p-6 sm:p-8">
+                  <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+                    <div>
+                      <h4 className="font-serif text-lg font-bold text-primary">WhatsApp API Gateway Settings</h4>
+                      <p className="text-xs text-slate-400 font-sans mt-0.5">Configure your Twilio, Meta Cloud API, or Custom SMS gateway integrations.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    {/* Settings Form */}
+                    <form onSubmit={handleSaveWaConfig} className="lg:col-span-8 space-y-6">
+                      {configSuccessMsg && (
+                        <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl p-3 text-xs font-sans font-medium flex items-center gap-2">
+                          <Icon name="check-circle" className="w-4 h-4 text-emerald-500" />
+                          <span>{configSuccessMsg}</span>
+                        </div>
+                      )}
+                      {configErrorMsg && (
+                        <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl p-3 text-xs font-sans font-medium flex items-center gap-2">
+                          <Icon name="alert-circle" className="w-4 h-4 text-red-500" />
+                          <span>{configErrorMsg}</span>
+                        </div>
+                      )}
+
+                      {/* Enabled Status */}
+                      <div className="flex items-center justify-between bg-slate-50 border border-slate-150 p-4.5 rounded-2xl">
+                        <div>
+                          <h6 className="font-sans font-bold text-xs text-primary uppercase tracking-wide">Enable Automated Booking Confirmations</h6>
+                          <p className="text-[10px] text-slate-400 mt-1">If enabled, a WhatsApp message will be sent automatically to the patient's number after they schedule a slot.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setWaConfig(prev => ({ ...prev, enabled: !prev.enabled }))}
+                          className={`w-14 h-8 rounded-full transition-all relative focus:outline-none ${waConfig.enabled ? 'bg-secondary' : 'bg-slate-300'}`}
+                        >
+                          <span className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all shadow ${waConfig.enabled ? 'right-1' : 'left-1'}`}></span>
+                        </button>
+                      </div>
+
+                      {/* Provider Select */}
+                      <div className="flex flex-col">
+                        <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Gateway Provider</label>
+                        <select
+                          value={waConfig.provider}
+                          onChange={(e) => setWaConfig(prev => ({ ...prev, provider: e.target.value }))}
+                          className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                        >
+                          <option value="twilio">Twilio WhatsApp API</option>
+                          <option value="meta">Meta WhatsApp Cloud API (Graph API)</option>
+                          <option value="custom">Custom Endpoint (Serverless proxy / Webhook)</option>
+                        </select>
+                      </div>
+
+                      {/* Twilio Fields */}
+                      {waConfig.provider === 'twilio' && (
+                        <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-1">
+                          <div className="flex flex-col">
+                            <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Twilio Account SID</label>
+                            <input
+                              type="text"
+                              value={waConfig.twilio.accountSid}
+                              onChange={(e) => setWaConfig(prev => ({ 
+                                ...prev, 
+                                twilio: { ...prev.twilio, accountSid: e.target.value } 
+                              }))}
+                              placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                              className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Twilio Auth Token</label>
+                            <input
+                              type="password"
+                              value={waConfig.twilio.authToken}
+                              onChange={(e) => setWaConfig(prev => ({ 
+                                ...prev, 
+                                twilio: { ...prev.twilio, authToken: e.target.value } 
+                              }))}
+                              placeholder="Your Twilio Authentication Token"
+                              className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Twilio Sender Number</label>
+                            <input
+                              type="text"
+                              value={waConfig.twilio.senderNumber}
+                              onChange={(e) => setWaConfig(prev => ({ 
+                                ...prev, 
+                                twilio: { ...prev.twilio, senderNumber: e.target.value } 
+                              }))}
+                              placeholder="whatsapp:+14155238886"
+                              className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                            />
+                            <span className="text-[9px] text-slate-400 mt-1">Twilio Sandbox or verified number, prefixed with <code>whatsapp:</code>.</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Meta Fields */}
+                      {waConfig.provider === 'meta' && (
+                        <div className="space-y-4 border-l-2 border-secondary/20 pl-4 py-1">
+                          <div className="flex flex-col">
+                            <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Meta Graph API System Token</label>
+                            <input
+                              type="password"
+                              value={waConfig.meta.accessToken}
+                              onChange={(e) => setWaConfig(prev => ({ 
+                                ...prev, 
+                                meta: { ...prev.meta, accessToken: e.target.value } 
+                              }))}
+                              placeholder="Permanent EAAB... access token"
+                              className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Phone Number ID</label>
+                            <input
+                              type="text"
+                              value={waConfig.meta.phoneNumberId}
+                              onChange={(e) => setWaConfig(prev => ({ 
+                                ...prev, 
+                                meta: { ...prev.meta, phoneNumberId: e.target.value } 
+                              }))}
+                              placeholder="e.g. 102938475610293"
+                              className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Template Name</label>
+                            <input
+                              type="text"
+                              value={waConfig.meta.templateName}
+                              onChange={(e) => setWaConfig(prev => ({ 
+                                ...prev, 
+                                meta: { ...prev.meta, templateName: e.target.value } 
+                              }))}
+                              placeholder="appointment_confirmation"
+                              className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                            />
+                            <span className="text-[9px] text-slate-400 mt-1">Must match the approved template name in Meta WhatsApp Business Manager.</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Custom Fields */}
+                      {waConfig.provider === 'custom' && (
+                        <div className="space-y-4 border-l-2 border-accent/20 pl-4 py-1">
+                          <div className="flex flex-col">
+                            <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Webhook Endpoint URL</label>
+                            <input
+                              type="url"
+                              value={waConfig.custom.endpoint}
+                              onChange={(e) => setWaConfig(prev => ({ 
+                                ...prev, 
+                                custom: { ...prev.custom, endpoint: e.target.value } 
+                              }))}
+                              placeholder="https://my-domain.com/api/whatsapp-webhook"
+                              className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                            />
+                            <span className="text-[9px] text-slate-400 mt-1">Custom server endpoint that accepts POST JSON with patient booking variables.</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Clinic Info */}
+                      <div className="border-t border-slate-100 pt-6 space-y-4">
+                        <h5 className="font-serif text-sm font-bold text-primary mb-2">Clinic Metadata Prefill</h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="flex flex-col">
+                            <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Clinic Name</label>
+                            <input
+                              type="text"
+                              value={waConfig.clinicDetails.name}
+                              onChange={(e) => setWaConfig(prev => ({ 
+                                ...prev, 
+                                clinicDetails: { ...prev.clinicDetails, name: e.target.value } 
+                              }))}
+                              className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Doctor Name</label>
+                            <input
+                              type="text"
+                              value={waConfig.clinicDetails.doctorName}
+                              onChange={(e) => setWaConfig(prev => ({ 
+                                ...prev, 
+                                clinicDetails: { ...prev.clinicDetails, doctorName: e.target.value } 
+                              }))}
+                              className="bg-[#FAF9F6] border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-750 transition-all focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isSavingConfig}
+                        className="bg-primary text-white hover:bg-slate-800 font-sans font-bold text-xs uppercase tracking-widest px-6 py-3.5 rounded-xl hover:scale-102 active:scale-98 transition-all flex items-center justify-center gap-1.5 shadow"
+                      >
+                        {isSavingConfig ? "Saving Settings..." : "Save Configuration"}
+                      </button>
+                    </form>
+
+                    {/* Test Console */}
+                    <div className="lg:col-span-4 bg-[#FAF9F6] border border-slate-200 p-5 rounded-2xl shadow-sm text-left space-y-6">
+                      <div>
+                        <h5 className="font-serif text-sm font-bold text-primary flex items-center gap-1.5">
+                          <Icon name="zap" className="w-4.5 h-4.5 text-accent" /> Live Gateway Test
+                        </h5>
+                        <p className="text-[10px] text-slate-400 mt-1">Send a simulated booking notification immediately to verify your API credentials.</p>
+                      </div>
+
+                      <form onSubmit={handleSendTestMessage} className="space-y-4">
+                        <div className="flex flex-col">
+                          <label className="text-[10px] font-bold text-slate-655 font-sans mb-1.5 uppercase tracking-wider">Recipient Mobile Number</label>
+                          <input
+                            type="tel"
+                            required
+                            value={testPhone}
+                            onChange={(e) => setTestPhone(e.target.value)}
+                            placeholder="E.g. +91 99999 99999"
+                            className="bg-white border border-slate-150 focus:border-secondary focus:bg-white rounded-xl px-3.5 py-2.5 text-xs text-slate-750 transition-all focus:outline-none"
+                          />
+                          <span className="text-[8px] text-slate-400 mt-1">Include country code (e.g. +91).</span>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isSendingTest}
+                          className="w-full bg-gradient-to-r from-accent via-accentDark to-accent text-primary font-sans font-bold text-xs uppercase tracking-widest py-3 rounded-xl shadow-goldGlow hover:scale-102 active:scale-98 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          {isSendingTest ? (
+                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <>
+                              <Icon name="message-square" className="w-4 h-4 text-primary" /> Send Test SMS
+                            </>
+                          )}
+                        </button>
+                      </form>
+
+                      {testResult && (
+                        <div className={`p-4 rounded-xl border text-[11px] leading-relaxed animate-pulse ${
+                          testResult.success 
+                            ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
+                            : 'bg-red-50 border-red-100 text-red-600'
+                        }`}>
+                          <div className="font-bold flex items-center gap-1 mb-1">
+                            <Icon name={testResult.success ? 'check-circle' : 'alert-triangle'} className={`w-4 h-4 ${testResult.success ? 'text-emerald-500' : 'text-red-500'}`} />
+                            <span>{testResult.success ? 'Success' : 'API Connection Error'}</span>
+                          </div>
+                          <span>{testResult.message}</span>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
