@@ -1504,6 +1504,7 @@
           setIsSubmitting(true);
           
           let dbSuccess = true;
+          let dbErrorMsg = null;
           const appointmentId = `DL-${Math.floor(100000 + Math.random() * 900000)}`;
           
           const timePart = formData.time ? `[Preferred Time: ${formData.time}]` : '';
@@ -1529,11 +1530,16 @@
               if (error) {
                 console.error("Supabase insert error:", error);
                 dbSuccess = false;
+                dbErrorMsg = error.message || JSON.stringify(error);
               }
             } catch (err) {
               console.error("Supabase connection exception:", err);
               dbSuccess = false;
+              dbErrorMsg = err.message || String(err);
             }
+          } else {
+            dbSuccess = false;
+            dbErrorMsg = "Supabase client not initialized (window.supabase is undefined)";
           }
 
           setIsSubmitting(false);
@@ -1553,7 +1559,7 @@
             setFormData({ name: '', phone: '', email: '', date: '', time: '', treatment: '', message: '' });
             setCurrentStep(1);
           } else {
-            onSubmitSuccess(formData.name, false);
+            onSubmitSuccess(formData.name, false, dbErrorMsg);
           }
         }
       };
@@ -2858,16 +2864,16 @@
         }
       };
 
-      const handleFormSubmitSuccess = (patientName, isDbSuccess = true) => {
+      const handleFormSubmitSuccess = (patientName, isDbSuccess = true, errorDetails = null) => {
         if (isDbSuccess) {
           setToastType('success');
           setToastMessage(`Thank you, ${patientName}! Your consultation request was received. We will contact you soon.`);
         } else {
           setToastType('error');
-          setToastMessage(`Sorry, ${patientName}, something went wrong with the database connection. Please try again.`);
+          setToastMessage(`Sorry, ${patientName}, database error: ${errorDetails || 'Connection failed'}. Please try again.`);
         }
         setBookingPresetService('');
-        setTimeout(() => setToastMessage(null), 5000);
+        setTimeout(() => setToastMessage(null), 10000);
       };
 
       return (
